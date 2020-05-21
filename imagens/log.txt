@@ -1,0 +1,28 @@
+2020-05-21 14:42:39
+loaded models
+----------adultos-lendo.jpg----------
+# Pessoas: 3
+Probabilidade NSFW: 0.02311267
+Faixas de Idade:: ['25-32', '25-32', '25-32']
+Elapsed time: 0.943332
+----------amamentando.jpg----------
+# Pessoas: 3
+Probabilidade NSFW: 0.97838736
+Faixas de Idade:: ['4-6', '0-2', '0-2']
+Elapsed time: 0.308546
+----------banho-bebe.jpg----------
+# Pessoas: 2
+Probabilidade NSFW: 0.10333952
+Faixas de Idade:: ['0-2', '25-32']
+Elapsed time: 0.322274
+----------criancas-praia.jpg----------
+# Pessoas: 2
+Probabilidade NSFW: 0.0021158908
+Faixas de Idade:: ['0-2', '0-2']
+Elapsed time: 0.301201
+----------rodrigo-faro-e-familia-praia.jpeg----------
+# Pessoas: 4
+Probabilidade NSFW: 0.21986164
+Faixas de Idade:: ['25-32', '8-13', '8-13', '25-32']
+Elapsed time: 0.331313
+2020-05-21 14:42:46
