@@ -1,14 +1,27 @@
 from configcnn import ConfigCNN
 import matplotlib.pyplot as plt
+import pandas as pd
 import os
 
 class Log():
     
     def __init__(self, files_path, plot=False):
         self.files_path = files_path
-        self.logfile = os.path.join(files_path, 'log.txt')
         
-        self.attprint = {'cont_age': '# Pessoas', 'prob_nsfw': 'Probabilidade NSFW', 'idx_age_pred': 'Faixas de Idade:'}
+        log_path = os.path.join(os.getcwd(), 'log')
+        if not os.path.isdir(log_path):
+            os.mkdir(log_path)
+        
+        logs = os.listdir(log_path)
+        
+        self.logfile = os.path.join(log_path, 'log_{:03}.txt'.format(len(logs)//2))
+        
+        self.attprint = {'cont_age': 'Número de Faces', 'prob_nsfw': 'Probabilidade NSFW', 'idx_age_pred': 'Faixas de Idade',
+                        'conf_faces': 'Confiança Faces'}
+        
+        self.results  = {'Arquivo': [], 'Probabilidade NSFW': [], 'Número de Faces': [], 'Confiança Faces': [],  
+                         'Faixas de Idade': [], 'Tempo de Análise': []}
+        
         self.ageclasses = ConfigCNN.classes
         self.buffer = ''
         
@@ -26,21 +39,41 @@ class Log():
                    'conf_faces']
             
             # Target File
-            self.buffer += 10*'-' + tup[1] + 10*'-' + '\n'
+            self.results['Arquivo'].append(tup[1]) 
             
             # Resultado
+            
             for k, resultado in enumerate(tup[2]):
                 if res[k] in self.attprint.keys():
-                    if res[k] == 'idx_age_pred':
-                        resultado = [self.ageclasses[age] for age in resultado]
-                    self.buffer += self.attprint[res[k]] + ': ' + str(resultado) + '\n'
+                    
+                    try:
+                        if res[k] == 'idx_age_pred':
+                            resultado = [self.ageclasses[age] for age in resultado]
+                    except: resultado = str(resultado)
+                    
+                    try:
+                        if res[k] == 'conf_faces':
+                            resultado = ['{:.3f}'.format(conf) for conf in resultado]          
+                    except: resultado = str(resultado)
+                        
+                    try:
+                        if res[k] == 'prob_nsfw':
+                            resultado = '{:.3f}'.format(resultado)        
+                    except: resultado = str(resultado)
+                    
+                    self.results[self.attprint[res[k]]].append(resultado)
                
-            self.buffer += 'Elapsed time: ' + str(tup[3]) + '\n'
+            # Elapsed time
+            self.results['Tempo de Análise'].append('{:.2f}'.format(tup[3]))
             
         elif mode == 'finish':
-            fp = open(self.logfile, 'w')
+#             self.buffer += 'Resultado da análise salvo em {}'.format(self.logfile[:-3]+'csv')                        
+                                    
+            fp = open(self.logfile, 'a+')
             fp.write(self.buffer)
             fp.close()
             
+            results = pd.DataFrame.from_dict(self.results)
+            results.to_csv(self.logfile[:-3]+'csv')
         
             

@@ -11,8 +11,8 @@ import random
 
 class ImageProcessor():
 
-    def __init__(self, files_path):
-        self.files_path = files_path
+    def __init__(self, files_dict):
+        self.file_names = list(files_dict.keys())
         self.timing = {"detect_faces": [], "get_faces_mtcnn2": [], "nsfw": [], "age": [], "all": []}
 
     def conv_pred(self, p, verbose=False):
@@ -24,9 +24,9 @@ class ImageProcessor():
             p = (proba > 0.5).astype('int32')
         return p
 
-    def get_data_and_predictions2(self, base_path, img_name, model_age, sess, model_nsfw, fn_load_image,
+    def get_data_and_predictions2(self, file_name, model_age, sess, model_nsfw, fn_load_image,
                                   detector, timing, child_conn, verbose=False):
-        file_name = os.path.join(base_path, img_name)
+
         if not os.path.isfile(file_name):
             print("not os.path.isfile({:})".format(file_name))
             return 0, 0, None, None, -1., None, None, [], []
@@ -78,14 +78,14 @@ class ImageProcessor():
 
         t1 = datetime.datetime.now()
         faces = []
-        try:
+#         try:
             #print(shape_img, img_work.shape, img_name)
-            faces = get_faces_mtcnn(img_work, detector, timing["detect_faces"])
-        except Exception as e:
-            print("Erro em mtcnn", e)
-            print(base_path, img_name)
-            print(img_work.shape)
-            raise Exception(e)
+        faces = get_faces_mtcnn(img_work, detector, timing["detect_faces"])
+#         except Exception as e:
+#             print("Erro em mtcnn", e)
+#             print(base_path, img_name)
+#             print(img_work.shape)
+#             raise Exception(e)
 
         t2 = datetime.datetime.now()
         timing["get_faces_mtcnn2"].append((t2 - t1).total_seconds())
@@ -190,17 +190,19 @@ class ImageProcessor():
             model_age = model_from_json(open(ConfigCNN.model_architecture).read())
             model_age.load_weights(ConfigCNN.model_weights)
             t0 = datetime.datetime.now()
-            child_conn.send(("imprime", "loaded models"))
+            child_conn.send(("imprime", "Modelos carregados. Inicia processamento de imagens."))
 
             abort = False
             del_mtcnn = 0
-            for target_file in sorted(os.listdir(self.files_path)):
+            for k, target_file in enumerate(sorted(self.file_names)):
+                print('\r{0}/{1}'.format(k, len(self.file_names)), end='', flush=True )
                 
                 if target_file[-3:] == 'txt': continue
 
-                if not os.path.isfile(os.path.join(self.files_path, target_file)): continue
+                if not os.path.isfile(target_file): continue
                 t3 = datetime.datetime.now()
-                res = self.get_data_and_predictions2(self.files_path, target_file, model_age, sess, model_nsfw, fn_load_image,detector, self.timing, child_conn, verbose)
+                res = self.get_data_and_predictions2(target_file, model_age, sess, model_nsfw, 
+                                                     fn_load_image,detector, self.timing, child_conn, verbose)
                 time.sleep(random.randint(1,10)/1000)
                 t4 = datetime.datetime.now()
                 tempo = (t4 - t3).total_seconds()
@@ -209,12 +211,13 @@ class ImageProcessor():
                 del_mtcnn += 1
 
 
-            child_conn.send(("imprime", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
+            child_conn.send(("imprime", '{} - {}'.format("Finalizado",
+                                                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z"))))
             try:
                 child_conn.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
             except Exception as e:
                 print("erro finish")
-            print('Análise completa. Resultados em {}log.txt'.format(self.files_path))
+            print('Análise completa. Log armazenado em {}'.format(child_conn.logfile))
 
 
         try:
