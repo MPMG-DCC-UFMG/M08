@@ -2,16 +2,26 @@
  Identificação de pedofilia em imagens e vídeos
  
 ### Dependências
-
-Instale as dependências listadas em `requirements.txt`<br>
+A ferramenta foi testada no Ubuntu 18.04, com a versão 10.2 do Cuda e CUDNN_MAJOR 7. A versão do Python recomendada é 3.7.6. As bibliotecas necessárias para execução do sistema estão listadas no arquivo `requirements.txt`.<br>
 No momento o sistema está configurado para rodar **somente com GPU**. Em breve atualizarei para configurar manualmente essa opção.
  
 ### Instruções de execução
 
-O processamento de imagens pode ser executado de acordo com o template de chamada apresentado a seguir. o `path/to/source/` deve ser substituído pelo caminho absoluto do diretório que contém as imagens a ser analisadas.
+O processamento de imagens e vídeos pode ser executado de acordo com o template de chamada apresentado a seguir. o `path/to/source/` deve ser substituído pelo caminho absoluto do diretório que contém as mídias a serem analisadas.
 
 ```python
 python main.py /path/to/source/ 
 ```
 
-A análise de vídeos ainda está sendo revisada. Assim que disponível, o código acima também estará apto a processar vídeos localizados no mesmo diretório raíz.
+### Resultados
+
+O sistema produz dois resultados, ambos armazenados no diretório `log` que futuramente servirá de consulta para preencher as informações na interface web.
+* Log de execução: Arquivo `log_xxx.txt` com o número `xxx` referente ao ID da ação executada (números inteiros). Futuramente o usuário irá alimentar o identificador único da análise para nomear os registros.
+* Resultado da análise: Arquivo `log_xxx.csv` contendo o resultado retornado pelos modelos envolvidos na análise: `[Nome do arquivo, Probabilidade NSFW, Número de Faces, Confiança Faces, Faixas de Idade, Tempo de Análise]` 
+
+### Sugestão de Hardware:
+
+* Processador: Intel® Xeon® Processor E7 v3/Core i7 com 12 núcleos 
+* RAM. Aqui depende do volume de dados (principalmente vídeos) que vai ser processado. Sugiro um mínimo de 32GB.
+* GPU: Geforce GTX TITAN X, com 12GB.
+* HD: Também depende do volume de dados que será armazenado. Requer envolvimento dos usuários do sistema para melhor definição. 
