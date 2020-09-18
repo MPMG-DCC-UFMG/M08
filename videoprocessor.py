@@ -16,9 +16,8 @@ from configcnn import ConfigCNN
 
 class VideoProcessor:
 
-    def __init__(self, source_path, files_path, dir_model=""):
-        self.source_path = source_path
-        self.files_path = files_path
+    def __init__(self, files_dict, dir_model=""):
+        self.file_names = list(files_dict.keys())
         self.timing = {"detect_faces": [], "get_faces_mtcnn2": [], "nsfw": [], "age": [], "all": []}
 
     def conv_pred(p, verbose=False):
@@ -57,7 +56,7 @@ class VideoProcessor:
             fh_im = BytesIO()
             imr.save(fh_im, format='JPEG')
             fh_im.seek(0)
-            image = (skimage.img_as_float(skimage.io.imread(fh_im, as_grey=False)).astype(np.float32))
+            image = (skimage.img_as_float(skimage.io.imread(fh_im)).astype(np.float32))
             H, W, _ = image.shape
             h, w = (224, 224)
             h_off = max((H - h) // 2, 0)
@@ -202,8 +201,10 @@ class VideoProcessor:
             if return_img:
                 ret_img = img2
 
-        return cont, coords, cont_age, cont_faixa, age_pred, child_pred, prob_nsfw, idx_age_pred, idx_child_pred, \
-               allpreds, conf_faces, ret_img
+#         return cont, coords, cont_age, cont_faixa, age_pred, child_pred, prob_nsfw, idx_age_pred, idx_child_pred, \
+#                allpreds, conf_faces, ret_img
+        return cont_age, cont_faixa, age_pred, child_pred, prob_nsfw, idx_age_pred, idx_child_pred, \
+               allpreds, conf_faces
 
     @staticmethod
     def get_labeled_frame(res, frame, frame_number, show_img=False, return_img=False, parameter_confidence=None):
@@ -377,12 +378,12 @@ class VideoProcessor:
         except Exception as ex:
             print("Erro cmds", ex)
 
-    def analyze_frames(self, name_video, num_video, child_conn, model_age, sess, model_nsfw, fn_load_image,
+    def analyze_frames(self, name_video, child_conn, model_age, sess, model_nsfw, fn_load_image,
                        detector, timing, verbose_af=True):
         num = None
         smp = []
         num_frames = 0
-        child_conn.send("processando video {:} - {:}".format(num_video, name_video))
+        child_conn.send("processando video {:}".format(name_video))
         cap = cv2.VideoCapture(name_video)
         smp, num_frames, fps = VideoProcessor.get_samples(cap)
         if smp is None:
@@ -438,7 +439,7 @@ class VideoProcessor:
         cap.release()
         return frames_video, qtd_imgs, num_frames, fps
 
-    def process(self, num_process, use_gpu, total_processes, queue_arqs, child_conn, num_videos, interrupt, verbose):
+    def process(self, child_conn, verbose=True, total_processes=1):
         # não mudar a ordem - não importar nada do keras e tf antes de configurar sessão
         from keras import backend as K
         import tensorflow as tf
@@ -447,33 +448,9 @@ class VideoProcessor:
 
         config = tf.ConfigProto()
         child_conn.send(("imprime", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
-
-        if total_processes < 1:
-            if verbose:
-                child_conn.send(("imprime", "Minimo de 1 processo"))
-            total_processes = 4
-
-        if use_gpu:
-            if total_processes > 4:
-                if verbose:
-                    child_conn.send(("imprime", "No maximo 4 total_processes com gpu"))
-                total_processes = 4
-            fracao = {1: 0.770, 2: 0.380, 3: 0.26, 4: 0.19}
-            config.gpu_options.per_process_gpu_memory_fraction = fracao[total_processes]
-        else:
-            config = tf.ConfigProto(intra_op_parallelism_threads=1,
-                                    inter_op_parallelism_threads=1, allow_soft_placement=True)
-
-        if num_process > total_processes:
-            child_conn.send(("imprime", "Processo excede limite permitido"))
-            child_conn.send(("imprime", "------\nAbortando {:}".format(num_process)))
-            return
-
-        if use_gpu:
-            child_conn.send(("imprime", "Init p {:} de {:} na gpu, com {:.1f}% de mem. "
-                  "GPU".format(num_process, total_processes, 100 * fracao[total_processes])))
-        else:
-            child_conn.send(("imprime", "Init p {:} de {:} na cpu".format(num_process, total_processes)))
+    
+        fracao = {1: 0.770, 2: 0.380, 3: 0.26, 4: 0.19}
+        config.gpu_options.per_process_gpu_memory_fraction = fracao[total_processes]
     
         sess = tf.Session(config=config)
         set_session(sess)
@@ -504,7 +481,6 @@ class VideoProcessor:
             model_age = model_from_json(open(ConfigCNN.model_architecture).read())
             model_age.load_weights(ConfigCNN.model_weights)
             t0 = datetime.datetime.now()
-            child_conn.send(("imprime", "loaded models in process {:}".format(num_process)))
 
             timing_tmp = {}
             keys_timing = ["detect_faces", "get_faces_mtcnn2", "nsfw", "age", "all"]
@@ -512,42 +488,12 @@ class VideoProcessor:
     
             abort = False
             del_mtcnn = 0
-            while not queue_arqs.empty():
-                if interrupt.value == 1:
-                    abort = True
-
-                target_file_hash = None
-                target_file = None
-                target_hash = None
-                try:
-                    target_file_hash = queue_arqs.get(False)
-                    target_file, target_hash = target_file_hash
-                    num_videos.value += 1
-                    print(num_videos.value, target_file)
-                except Exception as e:
-                    if not queue_arqs.empty():
-                        if verbose:
-                            print("imprime", "{:} queue_arqs bloqueado".format(num_process))
-                        time.sleep(1)
-                        continue
-
-                    if verbose:
-                        child_conn.send(("imprime", "{:} terminou via except {:}".format(num_process, e)))
-
-                    break
-
-                # se tiver interrompido, consome a fila sem processar
-                if abort:
-                    continue
-
-                if target_file is None:
-                    if verbose:
-                        print("imprime", "target_file is None")
-                    break
-
-
-                nome_video = os.path.join(self.files_path, target_file)
-                retaf = self.analyze_frames(nome_video, num_videos.value, child_conn, model_age, sess,
+            
+            for k, target_file in enumerate(sorted(self.file_names)):
+                
+                if not os.path.isfile(target_file): continue
+                
+                retaf = self.analyze_frames(target_file, child_conn, model_age, sess,
                                             model_nsfw, fn_load_image, detector, timing_tmp, verbose)
                 frames_video, qtdimgs, num_frames, fps = retaf
     
@@ -555,14 +501,14 @@ class VideoProcessor:
                     # videotmp = os.path.join(self.source_path, target_hash + ".avi") troca por causa do iped
                     videotmp = os.path.join(self.files_path, "videos_ffmpeg", target_hash + "_tmp.avi")
 
-                    self.convert_video(nome_video, videotmp)
+                    self.convert_video(target_file, videotmp)
                     if os.path.isfile(videotmp):
                         if os.path.getsize(videotmp) > 5120:
-                            retaf = self.analyze_frames(videotmp, num_videos.value, child_conn, model_age, sess,
+                            retaf = self.analyze_frames(videotmp, child_conn, model_age, sess,
                                                         model_nsfw, fn_load_image, detector, timing_tmp, verbose)
                             frames_video, qtdimgs, num_frames, fps = retaf
                             if qtdimgs > 0:
-                                nome_video = videotmp
+                                target_file = videotmp
                         else:
                             print("arquivo pequeno")
                     else:
@@ -571,22 +517,13 @@ class VideoProcessor:
                 frames_video["samples"] = qtdimgs
                 frames_video["fps"] = fps
                 frames_video["num_frames"] = num_frames
-                frames_video["nomevideo"] = nome_video
-                # cap.release()
-                # cv2.destroyAllWindows()
-                # video_data[arq] = (frames_video, target_file)
-                child_conn.send(("data_file", target_file, (frames_video, target_file, timing_tmp)))
+                frames_video["nomevideo"] = target_file
+
+                child_conn.send(("video_file", (frames_video, target_file, timing_tmp)))
                 del_mtcnn += 1
-                #if del_mtcnn % 8 == 0:
-                #    del detector
-                #    detector = MTCNN()
-                #    time.sleep(0.5)
+                
 
             child_conn.send(("imprime", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
-            if interrupt.value == 0:
-                child_conn.send(("imprime", "Finalizou batch - processo {:}".format(num_process)))
-            else:
-                child_conn.send(("imprime", "Cancelando batch {:}".format(num_process)))
             try:
                 child_conn.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
             except Exception as e:

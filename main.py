@@ -30,6 +30,5 @@ img_proc = ImageProcessor(file_searcher.files["images"])
 # use_gpu, total_processes, child_conn
 img_proc.process(True, 1, log_obj)    
 
-# vid_proc = VideoProcessor(files_searcher.files["videos"])
-# # use_gpu, total_processes, child_conn
-# vid_proc.process(True, 1, log_obj)    
+vid_proc = VideoProcessor(file_searcher.files["videos"])
+vid_proc.process(log_obj)    

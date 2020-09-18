@@ -189,7 +189,7 @@ class FileSearcher:
                          '{}: {}\n'.format("Número de arquivos de vídeo únicos",len(self.vid_files_list))
                        ))
 
-        signal_msg.send(('finish', 
+        signal_msg.send(('imprime', 
                         '{} - {}'.format('Finalizado', datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
                         ))
         return
