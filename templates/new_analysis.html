@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="title">
+  <section class="section has-background-link-light">
+    <div class="container">
+        <nav class="level pl-6 pr-6">
+            <div class="columns">
+                <div class="collumn is-fluid">
+                    <h3 class="subtitle is-3">Defina o diretório raiz, {{name}}</h3>
+
+                    <div class="file is-small is-info has-name">
+                        <label class="file-label">
+                            <script>
+                                $(function(){
+                                    $("a#input-folder").click(function(event){
+                                        $.getJSON('/SOdialog', { }, function(data){
+                                            $("#path-name").text(data.path)
+                                        });
+                                        return false;
+                                    });
+                                });
+                            </script>
+
+                            <a href="#" id="input-folder"><button class="file-input"></button></a>
+
+                            <span class="file-cta">
+                                <span class="file-icon">
+                                    <i class="fas fa-upload"></i>
+                                </span>
+
+                                <span class="file-label mr-5">
+                                    Selecione o diretório
+                                </span>
+                            </span>
+
+                            <span class="file-name has-background-white pr-6 pl-6 mr-6" id="path-name">
+                                Nome do diretório
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+</section>
+
+<section class="section has-background-white">
+    <div class="container is-fullwidth">
+        <nav class="level has-background-link-light pb-6 pr-6 pl-6 ml-6 mr-6">
+            <div class="level-left">
+                <div class="collumns">
+                    <div class="collumn pt-6 ml-6 pl-6 pr-6 pb-6">
+                        <h5 class="subtitle is-5 pr-6 mr-5">Defina o nome da análise:</h5>
+
+                        <div class="field has-addons">
+                            <div class="control">
+                                <input class="input pr-6" type="text" placeholder="Insira um nome único">
+                            </div>
+
+                            <div class="control">
+                                <a class="button has-background-info-dark has-text-white">Definir</a>
+                            </div>
+                        </div>
+
+                        <h5 class="subtitle is-5 pt-6 pr-6 mr-6">Passo 1: Processamento</h5>
+
+                        <script>
+                            $(function(){
+                                $("a#img-proc").click(function(event){
+                                    $.getJSON('/IMGprocessor', { }, function(data){
+
+                                    });
+                                    return false;
+                                });
+                            });
+                        </script>
+
+                        <div class="buttons">
+                            <button id="img-proc" class="button is-info is-fullwidth">Processar Imagens</button>
+                        </div>
+
+                        <script>
+                            $(function(){
+                                $("#vid-proc").click(function(event){
+                                    $.getJSON('/VIDprocessor', { }, function(data){
+
+                                    });
+                                    return false;
+                                });
+                            });
+                        </script>
+
+                        <div class="buttons">
+                            <button id="vid-proc" class="button is-info is-fullwidth">Processar Vídeos</button>
+                        </div>
+
+                        <script>
+                            $(function(){
+                                $("#all-proc").click(function(event){
+                                    $.getJSON('/IMGVIDprocessor', { }, function(data){
+
+                                    });
+                                    return false;
+                                });
+                            });
+                        </script>
+
+                        <div class="buttons">
+                            <button id="all-proc" class="button is-info is-fullwidth">Processar Todos</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="level-right">
+                <div class="collumns">
+                    <div class="collumn mt-6 pt-6 ml-6 mr-6 pr-6 pb-6">
+                        <h5 class="subtitle is-5 pt-6 pr-6 mr-6 pl-2">Passo 2: Relatórios</h5>
+
+                        <button class="button has-background-info-dark has-text-white is-fullwidth modal-button mb-5" id="modalopen" data-target="modal" aria-haspopup="true">Configurações</button>
+
+                        <div id="modal" class="modal">
+                            <div class="modal-background" id="modalback"></div>
+                            <div class="modal-card">
+                                <header class="modal-card-head has-background-white">
+                                    <p class="modal-card-title">Configurações</p>
+                                </header>
+
+                                <section class="modal-card-body has-background-link-light">
+                                    <div class="container is-fullwidth">
+                                        <nav class="level">
+                                            <div class="level-left">
+                                                <div class="collumns">
+                                                    <div class="collumn pl-3 pr-3 pb-6">
+                                                        <h5 class="subtitle is-5 has-text-left pt-4 pb-2">Limite de idade:</h5>
+                                                        <h5 class="subtitle is-5 has-text-left pb-2 pr-4">Confiança na detecção de pornografia:</h5>
+                                                        <h5 class="subtitle is-5 has-text-left">Confiança na detecção de face:</h5>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="level-right">
+                                                <div class="collumns  ">
+                                                    <div class="column mt-6 pt-6 pl-3 pr-3">
+							                            <form action="{{ url_for('main.new_analysis') }}" method="post">
+                                                            <div class="control">
+                                                                <div class="select is-fullwidth mb-2">
+                                                                    <select>
+                                                                        <option>Selecione</option>
+                                                                        <option>Idades 1</option>
+                                                                        <option>Idades 2</option>
+                                                                        <option>Idades 3</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="control mb-2">
+                                                                <input class="input mt-2" type="text" placeholder="Insira um valor entre 0 e 1" name="info2" />
+                                                            </div>
+
+                                                            <div class="control mb-3  ">
+                                                                <input class="input mt-2" type="text" placeholder="Insira um valor entre 0 e 1" name="info3"/>
+                                                            </div>
+
+                                                            <div class="control">
+                                                                <button class="button has-background-info-dark has-text-white is-fullwidth mt-6" type="submit" value="Submit">Definir</button>
+                                                            </div>
+							                            </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </nav>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <button class="modal-close is-large" id="modalclose" aria-label="close"></button>
+
+                            <script>
+                                $(document).ready(function(){
+                                    $("#modalopen").click(function(){
+                                        $("#modal").addClass("is-active");
+                                    });
+
+                                    $("#modalclose").click(function(){
+                                        $("#modal").removeClass("is-active");
+                                    });
+
+                                    $("#modalback").click(function(){
+                                        $("#modal").removeClass("is-active");
+                                    });
+
+                                });
+                            </script>
+                        </div>
+
+                        <div class="buttons">
+                            <button class="button is-info is-fullwidth">Gerar Relatório de Imagens</button>
+                        </div>
+
+                        <div class="buttons">
+                            <button class="button is-info is-fullwidth">Gerar Relatório de Vídeos</button>
+                        </div>
+
+                        <div class="buttons">
+                            <button class="button is-info is-fullwidth">Gerar Relatório de Todos</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+</section>
+
+<section class="section has-background-link-light">
+    <div class="container is-fullwidth">
+        <h5 class="subtitle is-5">Log do Processamento</h5>
+
+        <nav class="level pl-5 pr-5">
+            <main role="main" class="column box-deco has-background-white">
+                <article class="blog-post">
+                    <h4 id="log-area" class="title is-4">Área de Log</h4>
+                </article>
+            </main>
+        </nav>
+    </div>
+</section>
+</h1>
+{% endblock %}

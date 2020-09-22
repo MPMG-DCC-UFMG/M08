@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="title">
+    <section class="section has-background-link-light">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column is-half is-offset-one-quarter">
+                    <a href="{{ url_for('main.new_analysis') }}" class="button has-background-info-dark has-text-white is-large is-fullwidth">Nova Análise</a>
+                </div>
+            </div>
+
+            <div class="columns is-mobile">
+                <div class="column is-half is-offset-one-quarter">
+                    <a href="{{ url_for('main.search_analysis') }}" class="button is-info is-large is-fullwidth">Buscar Análise</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</h1>
+{% endblock %}
