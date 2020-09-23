@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-from imageprocessor import ImageProcessor
-from videoprocessor import VideoProcessor
-from filesearcher import FileSearcher
-from log import Log
-
 import sys, os
 import subprocess
 import warnings
@@ -12,6 +7,12 @@ warnings.simplefilter('ignore')
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+sys.path.append('./M08')
+
+from imageprocessor import ImageProcessor
+from videoprocessor import VideoProcessor
+from filesearcher import FileSearcher
+from log import Log
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
