@@ -26,9 +26,11 @@ log_obj = Log(files_path)
 file_searcher = FileSearcher(files_path)
 file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
 
+print('-'*25+'\nIniciando analise de imagens')
 img_proc = ImageProcessor(file_searcher.files["images"])
 # use_gpu, total_processes, child_conn
 img_proc.process(True, 1, log_obj)    
 
+print('-'*25+'\nIniciando analise de videos')
 vid_proc = VideoProcessor(file_searcher.files["videos"])
 vid_proc.process(log_obj)    
