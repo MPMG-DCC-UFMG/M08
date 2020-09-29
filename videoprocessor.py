@@ -490,7 +490,7 @@ class VideoProcessor:
             del_mtcnn = 0
             
             for k, target_file in enumerate(sorted(self.file_names)):
-                
+                print('\r{0}/{1}'.format(k, len(self.file_names)), end='', flush=True )
                 if not os.path.isfile(target_file): continue
                 
                 retaf = self.analyze_frames(target_file, child_conn, model_age, sess,
@@ -528,6 +528,7 @@ class VideoProcessor:
                 child_conn.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
             except Exception as e:
                 print("erro finish")
+            print('\nAnalise de videos concluida.')
 
         try:
             #print("del models")
