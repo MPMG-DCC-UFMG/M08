@@ -175,7 +175,7 @@ class ImageProcessor():
         model_nsfw = OpenNsfwModel()
         image_loader = ConfigCNN.IMAGE_LOADER_YAHOO
         input_type = InputType.TENSOR
-        weights_path = "tf_open_nsfw/data/open_nsfw-weights.npy"
+        weights_path = ConfigCNN.nsfw_weights_path
 
         with sess:
             model_nsfw.build(weights_path=weights_path, input_type=input_type)

@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 
 class ConfigCNN:
@@ -9,9 +9,10 @@ class ConfigCNN:
     IMAGE_LOADER_TENSORFLOW = "tensorflow"
     IMAGE_LOADER_YAHOO = "yahoo"
     window_size = (128, 128)
-    dir_model = "./dados_cnn/"
-    if sys.platform.startswith('win'):
-        dir_model = "./dados_cnn/"
-    model_architecture = dir_model + "vgg16_agegender_model.json"
-    model_weights = dir_model + "vgg16_agegender_fold0_a_128_weights-15_age_0.661_ch_0.976_gd_0.906.hdf5"
-    nsfw_weights_path = "tf_open_nsfw/data/open_nsfw-weights.npy"
+    dir_model = os.path.join(os.getcwd(), 'M08', 'dados_cnn')
+    
+    model_architecture = os.path.join(dir_model, "vgg16_agegender_model.json")
+    model_weights = os.path.join(dir_model, "vgg16_agegender_fold0_a_128_weights-15_age_0.661_ch_0.976_gd_0.906.hdf5")
+    
+    dir_nsfw_model = os.path.join(os.getcwd(), 'M08', 'tf_open_nsfw', 'data')
+    nsfw_weights_path = os.path.join(dir_nsfw_model, "open_nsfw-weights.npy")

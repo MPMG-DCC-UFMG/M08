@@ -13,7 +13,6 @@ from faces import get_faces_mtcnn
 import random
 from configcnn import ConfigCNN
 
-
 class VideoProcessor:
 
     def __init__(self, files_dict, dir_model=""):
@@ -466,7 +465,7 @@ class VideoProcessor:
         model_nsfw = OpenNsfwModel()
         image_loader = ConfigCNN.IMAGE_LOADER_YAHOO
         input_type = InputType.TENSOR
-        weights_path = "tf_open_nsfw/data/open_nsfw-weights.npy"
+        weights_path = ConfigCNN.nsfw_weights_path
     
         with sess:
             model_nsfw.build(weights_path=weights_path, input_type=input_type)
@@ -490,7 +489,7 @@ class VideoProcessor:
             del_mtcnn = 0
             
             for k, target_file in enumerate(sorted(self.file_names)):
-                
+                print('\rProcessando vídeo {}/{}'.format(k+1, len(self.file_names)), end='', flush=True)
                 if not os.path.isfile(target_file): continue
                 
                 retaf = self.analyze_frames(target_file, child_conn, model_age, sess,
