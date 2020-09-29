@@ -217,7 +217,7 @@ class ImageProcessor():
                 child_conn.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
             except Exception as e:
                 print("erro finish")
-            print('Análise completa. Log armazenado em {}'.format(child_conn.logfile))
+            print('\nAnálise de imagens completa. Log armazenado em {}'.format(child_conn.logfile))
 
 
         try:
