@@ -13,7 +13,7 @@
                         <label class="file-label">
                             <script>
                                 $(function(){
-                                    $("a#input-folder").click(function(event){
+                                    $("#input-folder").click(function(event){
                                         $.getJSON('/SOdialog', { }, function(data){
                                             $("#path-name").text(data.path)
                                         });
@@ -155,16 +155,16 @@
                                                                 </div>
                                                             </div>
 
-                                                            <div class="control mb-2">
-                                                                <input class="input mt-2" type="text" placeholder="Insira um valor entre 0 e 1" name="info2" />
+                                                            <div class="buttons">
+                                                                <a href="{{ url_for('main.report') }}" class="button is-info is-fullwidth">Gerar Relatório de Imagens</a>
                                                             </div>
 
-                                                            <div class="control mb-3  ">
-                                                                <input class="input mt-2" type="text" placeholder="Insira um valor entre 0 e 1" name="info3"/>
+                                                            <div class="buttons">
+                                                                <a href="{{ url_for('main.report') }}" class="button is-info is-fullwidth">Gerar Relatório de Vídeos</a>
                                                             </div>
 
-                                                            <div class="control">
-                                                                <button class="button has-background-info-dark has-text-white is-fullwidth mt-6" type="submit" value="Submit">Definir</button>
+                                                            <div class="buttons">
+                                                                <a href="{{ url_for('main.report') }}" class="button is-info is-fullwidth">Gerar Relatório de Todos</a>
                                                             </div>
 							                            </form>
                                                     </div>

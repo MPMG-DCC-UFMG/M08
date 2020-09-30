@@ -47,6 +47,13 @@
                             {% endif %}
                             {% endif %}
                             {% if current_user.is_authenticated %}
+                            {% if request.url_rule.endpoint == "main.report" %}
+                            <a href="{{ url_for('main.new_analysis') }}" class="navbar-item">
+                                Voltar
+                            </a>
+                            {% endif %}
+                            {% endif %}
+                            {% if current_user.is_authenticated %}
                             <a href="{{ url_for('auth.logout') }}" class="navbar-item">
                                 Sair
                             </a>

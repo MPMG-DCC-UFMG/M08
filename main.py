@@ -39,14 +39,14 @@ def SOdialog():
     global file_searcher
     global log_obj
     global global_path
-    
+
     local_path = dialog._open_dialog_file()
     global_path = local_path
     log_obj = Log(local_path)
     file_searcher = FileSearcher(local_path)
     file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
     print(log_obj.buffer)
-    
+
     return jsonify(path=global_path)
 
 @main.route('/new_analysis', methods=['POST', 'GET'])
@@ -61,7 +61,7 @@ def new_analysis():
 def IMGprocessor():
     global file_searcher
     global log_obj
-    
+
     print('image processor')
     img_proc = ImageProcessor(file_searcher.files["images"])
     print('\n\nprocess\n\n')
@@ -73,7 +73,7 @@ def IMGprocessor():
 def VIDprocessor():
     global file_searcher
     global log_obj
-    
+
     print('-'*25+'\nIniciando analise de vídeos')
     vid_proc = VideoProcessor(file_searcher.files["videos"])
     vid_proc.process(log_obj)
@@ -85,12 +85,17 @@ def VIDprocessor():
 def IMGVIDprocessor():
     global file_searcher
     global log_obj
-    
+
     img_proc = ImageProcessor(file_searcher.files["images"])
     img_proc.process(True, 1, log_obj)
     vid_proc = VideoProcessor(file_searcher.files["videos"])
     vid_proc.process(log_obj)
     return '', 204
+
+@main.route('/report', methods=['POST', 'GET'])
+@login_required
+def report():
+    return render_template('report.html', name=current_user.name, id_report="123456", path="teste/teste/teste")
 
 @main.route('/search_analysis', methods=['POST', 'GET'])
 @login_required
