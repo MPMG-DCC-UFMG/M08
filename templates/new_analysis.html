@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 <h1 class="title">
   <section class="section has-background-link-light">
@@ -7,9 +6,9 @@
         <nav class="level pl-6 pr-6">
             <div class="columns">
                 <div class="collumn is-fluid">
-                    <h3 class="subtitle is-3">Defina o diretório raiz, {{name}}</h3>
+                    <h3 class="subtitle is-3 has-text-left">Defina o diretório raiz, {{name}}</h3>
 
-                    <div class="file is-small is-info has-name">
+                    <div class="file is-small is-info has-name is-fullwidth">
                         <label class="file-label">
                             <script>
                                 $(function(){
@@ -35,7 +34,7 @@
                             </span>
 
                             <span class="file-name has-background-white pr-6 pl-6 mr-6" id="path-name">
-                                Nome do diretório
+                                {{ path }}
                             </span>
                         </label>
                     </div>
@@ -51,19 +50,18 @@
             <div class="level-left">
                 <div class="collumns">
                     <div class="collumn pt-6 ml-6 pl-6 pr-6 pb-6">
-                        <h5 class="subtitle is-5 pr-6 mr-5">Defina o nome da análise:</h5>
-
-                        <div class="field has-addons">
-                            <div class="control">
-                                <input class="input pr-6" type="text" placeholder="Insira um nome único">
-                            </div>
-
-                            <div class="control">
-                                <a class="button has-background-info-dark has-text-white">Definir</a>
-                            </div>
-                        </div>
-
-                        <h5 class="subtitle is-5 pt-6 pr-6 mr-6">Passo 1: Processamento</h5>
+                        <h5 class="subtitle is-5 pr-6 mr-5">Defina o identificador da análise:</h5>
+							<form action="/idprocess" method="post">
+								<div class="field has-addons">							
+									<div class="control">
+										<input class="input pr-6" type="text" name='id-process' placeholder="Insira um nome">
+									</div>
+									<div class="control">
+										<button type="submit" class="button has-background-info-dark has-text-white">Definir</button> 
+									</div>
+								</div>
+							</form>
+                        <h5 class="subtitle is-5 pt-2 pr-6 mr-6">Passo 1: Processamento</h5>
 
                         <script>
                             $(function(){
@@ -155,16 +153,16 @@
                                                                 </div>
                                                             </div>
 
-                                                            <div class="buttons">
-                                                                <a href="{{ url_for('main.report') }}" class="button is-info is-fullwidth">Gerar Relatório de Imagens</a>
+                                                            <div class="control mb-2">
+                                                                <input class="input mt-2" type="text" placeholder="Insira um valor entre 0 e 1" name="info2" />
                                                             </div>
 
-                                                            <div class="buttons">
-                                                                <a href="{{ url_for('main.report') }}" class="button is-info is-fullwidth">Gerar Relatório de Vídeos</a>
+                                                            <div class="control mb-3  ">
+                                                                <input class="input mt-2" type="text" placeholder="Insira um valor entre 0 e 1" name="info3"/>
                                                             </div>
 
-                                                            <div class="buttons">
-                                                                <a href="{{ url_for('main.report') }}" class="button is-info is-fullwidth">Gerar Relatório de Todos</a>
+                                                            <div class="control">
+                                                                <button class="button has-background-info-dark has-text-white is-fullwidth mt-6" type="submit" value="Submit">Definir</button>
                                                             </div>
 							                            </form>
                                                     </div>
@@ -194,17 +192,48 @@
                                 });
                             </script>
                         </div>
+						
+						<script>
+                            $(function(){
+                                $("#img-report").click(function(event){
+                                    $.getJSON('/IMGreport', { }, function(data){
 
+                                    });
+                                    return false;
+                                });
+                            });
+                        </script>
+						
                         <div class="buttons">
-                            <button class="button is-info is-fullwidth">Gerar Relatório de Imagens</button>
+                            <button id='img-report' class="button is-info is-fullwidth">Gerar Relatório de Imagens</button>
+                        </div>
+						
+						<script>
+                            $(function(){
+                                $("#vid-report").click(function(event){
+                                    $.getJSON('/VIDreport', { }, function(data){
+
+                                    });
+                                    return false;
+                                });
+                            });
+                        </script>
+                        <div class="buttons">
+                            <button id="vid-report" class="button is-info is-fullwidth">Gerar Relatório de Vídeos</button>
                         </div>
 
-                        <div class="buttons">
-                            <button class="button is-info is-fullwidth">Gerar Relatório de Vídeos</button>
-                        </div>
+						<script>
+                            $(function(){
+                                $("#imgvid-report").click(function(event){
+                                    $.getJSON('/IMGVIDreport', { }, function(data){
 
+                                    });
+                                    return false;
+                                });
+                            });
+                        </script>
                         <div class="buttons">
-                            <button class="button is-info is-fullwidth">Gerar Relatório de Todos</button>
+                            <button id="imgvid-report" class="button is-info is-fullwidth">Gerar Relatório de Todos</button>
                         </div>
                     </div>
                 </div>

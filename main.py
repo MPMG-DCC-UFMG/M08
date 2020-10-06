@@ -13,16 +13,23 @@ sys.path.append('./M08')
 from imageprocessor import ImageProcessor
 from videoprocessor import VideoProcessor
 from filesearcher import FileSearcher
+from report import Report
 from log import Log
 
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify,\
+                    flash, redirect, url_for
 from . import db
 from . import dialog
 from flask_login import login_required, current_user
 
 main = Blueprint('main', __name__)
-log_obj = None
+
+#### Global variables
+log_obj = Log()
 file_searcher = None
+id_process = None
+global_path = 'Nome do Diretório'
+####
 
 @main.route('/')
 def index():
@@ -42,7 +49,6 @@ def SOdialog():
 
     local_path = dialog._open_dialog_file()
     global_path = local_path
-    log_obj = Log(local_path)
     file_searcher = FileSearcher(local_path)
     file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
     print(log_obj.buffer)
@@ -54,17 +60,35 @@ def SOdialog():
 def new_analysis():
     if request.method == 'POST':
         print(request.form['info3'])
-    return render_template('new_analysis.html', name=current_user.name)
+    return render_template('new_analysis.html', name=current_user.name, path=global_path)
+
+@main.route('/idprocess', methods=['POST'])
+@login_required
+def IDset():
+    global id_process
+    global log_obj
+    
+    id_process = request.form.get('id-process')
+    
+    if id_process in log_obj.all_logs: 
+        flash('O identificador {} já existe.'.format(id_process))
+        return redirect(url_for('main.new_analysis')) 
+    
+    log_obj.set_id(id_process)
+    log_obj.send(('imprime', 'identificador definido com sucesso'))
+    return '', 204
 
 @main.route('/IMGprocessor', methods=['POST', 'GET'])
 @login_required
 def IMGprocessor():
     global file_searcher
     global log_obj
-
-    print('image processor')
+    
+    if id_process is None: 
+        flash('Defina o identificador da análise.'.format(id_process))
+        return redirect(url_for('main.new_analysis')) 
+    
     img_proc = ImageProcessor(file_searcher.files["images"])
-    print('\n\nprocess\n\n')
     img_proc.process(True, 1, log_obj)
     return '', 204
 
@@ -74,15 +98,54 @@ def VIDprocessor():
     global file_searcher
     global log_obj
 
-    print('-'*25+'\nIniciando analise de vídeos')
+    if id_process is None: 
+        flash('Defina o identificador da análise.'.format(id_process))
+        return redirect(url_for('main.new_analysis')) 
+    
     vid_proc = VideoProcessor(file_searcher.files["videos"])
     vid_proc.process(log_obj)
-    print('\nConcluído.'+'\n'+'-'*25)
     return '', 204
 
 @main.route('/IMGVIDprocessor')
 @login_required
 def IMGVIDprocessor():
+    global file_searcher
+    global log_obj
+    
+    if id_process is None: 
+        flash('Defina o identificador da análise.'.format(id_process))
+        return redirect(url_for('main.new_analysis')) 
+    
+    img_proc = ImageProcessor(file_searcher.files["images"])
+    img_proc.process(True, 1, log_obj)
+    vid_proc = VideoProcessor(file_searcher.files["videos"])
+    vid_proc.process(log_obj)
+    return '', 204
+
+@main.route('/IMGreport', methods=['POST', 'GET'])
+@login_required
+def IMGreport():
+    global file_searcher
+    global log_obj
+    
+    img_report = Report(log_obj.log_path, log_obj.logfile) 
+    html_path = img_report.generate_img(return_path=True)
+    
+    return render_template('report.html', name=current_user.name,) 
+    
+@main.route('/VIDreport')
+@login_required
+def VIDreport():
+    global file_searcher
+    global log_obj
+
+    vid_proc = VideoProcessor(file_searcher.files["videos"])
+    vid_proc.process(log_obj)
+    return '', 204
+
+@main.route('/IMGVIDreport')
+@login_required
+def IMGVIDreport():
     global file_searcher
     global log_obj
 

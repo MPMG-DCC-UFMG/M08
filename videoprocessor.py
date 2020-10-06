@@ -488,6 +488,8 @@ class VideoProcessor:
             abort = False
             del_mtcnn = 0
             
+            child_conn.send(('imprime','Iniciando análise de vídeos - {}'.format(
+                                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")) ))
             for k, target_file in enumerate(sorted(self.file_names)):
                 print('\rProcessando vídeo {}/{}'.format(k+1, len(self.file_names)), end='', flush=True)
                 if not os.path.isfile(target_file): continue
@@ -527,6 +529,8 @@ class VideoProcessor:
                 child_conn.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
             except Exception as e:
                 print("erro finish")
+                
+            child_conn.send(('imprime', 'Análise de vídeos completa. Verifique o log em caso de erros.'))
 
         try:
             #print("del models")

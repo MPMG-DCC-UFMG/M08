@@ -194,8 +194,10 @@ class ImageProcessor():
 
             abort = False
             del_mtcnn = 0
+            child_conn.send(('imprime','Iniciando análise de imagens - {}'.format(
+                                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")) ))
             for k, target_file in enumerate(sorted(self.file_names)):
-                print('\r{0}/{1}'.format(k, len(self.file_names)), end='', flush=True )
+                print('\rProcessando imagem {0}/{1}'.format(k, len(self.file_names)), end='', flush=True )
                 
                 if target_file[-3:] == 'txt': continue
 
@@ -217,7 +219,7 @@ class ImageProcessor():
                 child_conn.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
             except Exception as e:
                 print("erro finish")
-            print('Análise completa. Log armazenado em {}'.format(child_conn.logfile))
+            child_conn.send(('imprime', 'Análise de imagens completa. Verifique o log em caso de erros.'))
 
 
         try:

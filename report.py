@@ -22,7 +22,7 @@ class Report():
         self.results  = None
         self.classes  = ['Criança', 'NSFW']
         
-    def generate_img(self,):
+    def generate_img(self, return_path=True):
         
         self.results  = {'Arquivo': [], 'Probabilidade NSFW': [], 'Número de Faces': [], 'Confiança Faces': [],  
                          'Faixas de Idade': [], 'Detector Criança': [], 'Classe': [], 'Tempo de Análise': []}
@@ -55,9 +55,16 @@ class Report():
                 
             self.results['Classe'].append(classes)
 
-        return html_style()
+        report = html_style()
+        
+        if return_path:
+            html_path = os.path.join(self.savepath, self.filename+'.html') 
+            report.to_html(html_path)
+            return html_path
+        else:
+            return html
     
-    def generate_vid_summary(self):
+    def generate_vid_summary(self, return_path=True):
         
         self.results  = {'Arquivo': [], 'Probabilidade NSFW': [], 'Número de Faces': [], 'Confiança Faces': [],  
                          'Faixas de Idade': [], 'Detector Criança': [], 'Classe': [], 'Tempo de Análise': []}
@@ -89,7 +96,14 @@ class Report():
         
             self.results['Classe'].append(classes)
             
-        return html_style()
+        report = html_style()
+        
+        if return_path:
+            html_path = os.path.join(self.savepath, self.filename+'.html') 
+            report.to_html(html_path)
+            return html_path
+        else:
+            return html
         
     def generate_vid_perframe(self, filename):
         pass ########## TODO
