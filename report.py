@@ -55,14 +55,14 @@ class Report():
                 
             self.results['Classe'].append(classes)
 
-        report = html_style()
+        report = self.html_style()
         
         if return_path:
             html_path = os.path.join(self.savepath, self.filename+'.html') 
             report.to_html(html_path)
             return html_path
         else:
-            return html
+            return report
     
     def generate_vid_summary(self, return_path=True):
         
@@ -96,14 +96,14 @@ class Report():
         
             self.results['Classe'].append(classes)
             
-        report = html_style()
+        report = self.html_style()
         
         if return_path:
             html_path = os.path.join(self.savepath, self.filename+'.html') 
             report.to_html(html_path)
             return html_path
         else:
-            return html
+            return report
         
     def generate_vid_perframe(self, filename):
         pass ########## TODO

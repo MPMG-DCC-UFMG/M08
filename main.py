@@ -125,40 +125,41 @@ def IMGVIDprocessor():
 @main.route('/IMGreport', methods=['POST', 'GET'])
 @login_required
 def IMGreport():
-    global file_searcher
     global log_obj
     
-    img_report = Report(log_obj.log_path, log_obj.logfile) 
-    html_path = img_report.generate_img(return_path=True)
+    img_report = Report(log_obj.log_path, log_obj.result_file) 
+    html_path = img_report.generate_img(return_path=False)
     
-    return render_template('report.html', name=current_user.name,) 
+    return render_template('report.html', html=[html_path], name=current_user.name, 
+                           id_report=id_process, path=global_path) 
     
-@main.route('/VIDreport')
+@main.route('/VIDreport', methods=['POST', 'GET'])
 @login_required
 def VIDreport():
-    global file_searcher
     global log_obj
+    
+    vid_report = Report(log_obj.log_path, log_obj.result_file) 
+    html_path = img_report.generate_vid_summary(return_path=False)
+    
+    return render_template('report.html', html=[html_path], name=current_user.name, 
+                           id_report=id_process, path=global_path) 
 
-    vid_proc = VideoProcessor(file_searcher.files["videos"])
-    vid_proc.process(log_obj)
-    return '', 204
-
-@main.route('/IMGVIDreport')
+@main.route('/IMGVIDreport', methods=['POST', 'GET'])
 @login_required
 def IMGVIDreport():
-    global file_searcher
     global log_obj
-
-    img_proc = ImageProcessor(file_searcher.files["images"])
-    img_proc.process(True, 1, log_obj)
-    vid_proc = VideoProcessor(file_searcher.files["videos"])
-    vid_proc.process(log_obj)
-    return '', 204
-
-@main.route('/report', methods=['POST', 'GET'])
-@login_required
-def report():
-    return render_template('report.html', name=current_user.name, id_report="123456", path="teste/teste/teste")
+    global id_process
+    global global_path
+    
+    img_report = Report(log_obj.log_path, log_obj.result_file) 
+    html_img = img_report.generate_img(return_path=False)
+    
+    vid_report = Report(log_obj.log_path, log_obj.result_file) 
+    html_vid = img_report.generate_vid_summary(return_path=False)
+    
+    html_paths = [html_img, html_vid]
+    return render_template('report.html', html=html_paths, name=current_user.name, 
+                           id_report=id_process, path=global_path) 
 
 @main.route('/search_analysis', methods=['POST', 'GET'])
 @login_required
