@@ -454,7 +454,7 @@ class VideoProcessor:
         sess = tf.Session(config=config)
         set_session(sess)
     
-        from mtcnn.mtcnn import MTCNN
+        from mtcnn_local.mtcnn import MTCNN
         from tf_open_nsfw.model import OpenNsfwModel, InputType
         from tf_open_nsfw.image_utils import create_tensorflow_image_loader
         from tf_open_nsfw.image_utils import create_yahoo_image_loader

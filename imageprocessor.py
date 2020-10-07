@@ -8,7 +8,6 @@ from faces import get_faces_mtcnn
 from configcnn import ConfigCNN
 import random
 
-
 class ImageProcessor():
 
     def __init__(self, files_dict):
@@ -45,7 +44,7 @@ class ImageProcessor():
             return 0, 0, None, None, -1., None, None, [], []
 
         shape_img = img_work.shape
-
+        
         min_dim = min(shape_img[0], shape_img[1])
         if min_dim < 30:
             print("min_dim < 30")
@@ -61,17 +60,17 @@ class ImageProcessor():
             new_shape_img = (int((shape_img[1] * lim_inferior) / max_dim),
                              int((shape_img[0] * lim_inferior) / max_dim))
             img_work = cv2.resize(img_work, new_shape_img, interpolation=cv2.INTER_AREA)
-            #print("upscaled")
+#             print("upscaled")
         else:
             lim_superior = min(1440, max_dim)
             if max_dim > 1440 and lim_superior < max_dim:
                 new_shape_img = (int((shape_img[1] * lim_superior) / max_dim),
                                  int((shape_img[0] * lim_superior) / max_dim))
                 img_work = cv2.resize(img_work, new_shape_img, interpolation=cv2.INTER_AREA)
-                #print("downscaled")
+#                 print("downscaled")
             else:
                 new_shape_img = shape_img
-                #print("not scaled")
+#                 print("not scaled")
 
         img_work = cv2.cvtColor(img_work, cv2.COLOR_BGR2RGB)
         area_total = img_work.shape[0] * img_work.shape[1]
@@ -163,8 +162,8 @@ class ImageProcessor():
 
         sess = tf.Session(config=config)
         set_session(sess)
-
-        from mtcnn.mtcnn import MTCNN
+        
+        from mtcnn_local.mtcnn import MTCNN
         from tf_open_nsfw.model import OpenNsfwModel, InputType
         from tf_open_nsfw.image_utils import create_tensorflow_image_loader
         from tf_open_nsfw.image_utils import create_yahoo_image_loader
