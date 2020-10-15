@@ -50,14 +50,14 @@
             <div class="level-left">
                 <div class="collumns">
                     <div class="collumn pt-6 ml-6 pl-6 pr-6 pb-6">
-                        <h5 class="subtitle is-5 pr-6 mr-5">Defina o identificador da análise:</h5>
+                        <h5 class="subtitle is-5 pr-6 mr-5 has-text-left">ID da análise: {{ id_process }}</h5>
 							<form action="/idprocess" method="post">
 								<div class="field has-addons">							
 									<div class="control">
 										<input class="input pr-6" type="text" name='id-process' placeholder="Insira um nome">
 									</div>
 									<div class="control">
-										<button type="submit" class="button has-background-info-dark has-text-white">Definir</button> 
+										<button id="id-set" class="button has-background-info-dark has-text-white">Definir</button> 
 									</div>
 								</div>
 							</form>
@@ -244,15 +244,19 @@
 
 <section class="section has-background-link-light">
     <div class="container is-fullwidth">
-        <h5 class="subtitle is-5">Log do Processamento</h5>
+		<form action="/log" method="post">
+		<label class="subtitle is-3">Log do Processamento </label> 
+		<button type="submit" class="button is-link ml-2"> 
+			<span> Atualizar </span>
+		</button>
+		</form>
 
-        <nav class="level pl-5 pr-5">
-            <main role="main" class="column box-deco has-background-white">
-                <article class="blog-post">
-                    <h4 id="log-area" class="title is-4">Área de Log</h4>
-                </article>
-            </main>
-        </nav>
+		<main role="main" class="column box-deco has-background-white">
+			<article class="blog-post">
+				<p id="log" style='text-align: left; overflow-y: scroll; max-height: 300px; font-size: medium; white-space: pre-wrap'> {{ buffer }} </p>
+			</article>
+		</main>
+
     </div>
 </section>
 </h1>

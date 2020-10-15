@@ -27,8 +27,8 @@ main = Blueprint('main', __name__)
 #### Global variables
 log_obj = Log()
 file_searcher = None
-id_process = None
-global_path = 'Nome do Diretório'
+id_process = ''
+global_path = 'Caminho do Diretório'
 ####
 
 @main.route('/')
@@ -39,6 +39,13 @@ def index():
 @login_required
 def home():
     return render_template('home.html')
+
+@main.route('/log', methods=['POST', 'GET'])
+@login_required
+def funcao_teste():
+#     flash(log_obj.buffer, 'log')
+    return redirect(url_for('main.new_analysis')) 
+
 
 @main.route('/SOdialog')
 @login_required
@@ -51,7 +58,6 @@ def SOdialog():
     global_path = local_path
     file_searcher = FileSearcher(local_path)
     file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
-    print(log_obj.buffer)
 
     return jsonify(path=global_path)
 
@@ -60,23 +66,24 @@ def SOdialog():
 def new_analysis():
     if request.method == 'POST':
         print(request.form['info3'])
-    return render_template('new_analysis.html', name=current_user.name, path=global_path)
+    return render_template('new_analysis.html', name=current_user.name, path=global_path, 
+                                                id_process=id_process, buffer=log_obj.buffer)
 
-@main.route('/idprocess', methods=['POST'])
+@main.route('/idprocess', methods=['GET','POST'])
 @login_required
 def IDset():
     global id_process
     global log_obj
-    
+    print('\nIDset\n')
     id_process = request.form.get('id-process')
     
     if id_process in log_obj.all_logs: 
-        flash('O identificador {} já existe.'.format(id_process))
+        flash('O identificador {} já existe.'.format(id_process), 'error')
         return redirect(url_for('main.new_analysis')) 
     
     log_obj.set_id(id_process)
-    log_obj.send(('imprime', 'identificador definido com sucesso'))
-    return '', 204
+    log_obj.send(('imprime', 'identificador {} definido com sucesso'.format(id_process)))
+    return redirect(url_for('main.new_analysis')) 
 
 @main.route('/IMGprocessor', methods=['POST', 'GET'])
 @login_required
@@ -84,8 +91,8 @@ def IMGprocessor():
     global file_searcher
     global log_obj
     
-    if id_process is None: 
-        flash('Defina o identificador da análise.'.format(id_process))
+    if id_process is '': 
+        flash('Defina o identificador da análise.'.format(id_process), 'error')
         return redirect(url_for('main.new_analysis')) 
     
     img_proc = ImageProcessor(file_searcher.files["images"])
@@ -98,8 +105,8 @@ def VIDprocessor():
     global file_searcher
     global log_obj
 
-    if id_process is None: 
-        flash('Defina o identificador da análise.'.format(id_process))
+    if id_process is '': 
+        flash('Defina o identificador da análise.'.format(id_process), 'error')
         return redirect(url_for('main.new_analysis')) 
     
     vid_proc = VideoProcessor(file_searcher.files["videos"])
@@ -112,8 +119,8 @@ def IMGVIDprocessor():
     global file_searcher
     global log_obj
     
-    if id_process is None: 
-        flash('Defina o identificador da análise.'.format(id_process))
+    if id_process is '': 
+        flash('Defina o identificador da análise.'.format(id_process), 'error')
         return redirect(url_for('main.new_analysis')) 
     
     img_proc = ImageProcessor(file_searcher.files["images"])
