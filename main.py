@@ -35,10 +35,7 @@ global_path = 'Caminho do Diretório'
 def index():
     return render_template('index.html')
 
-@main.route('/home')
-@login_required
-def home():
-    return render_template('home.html')
+
 
 @main.route('/log', methods=['POST', 'GET'])
 @login_required
@@ -55,7 +52,8 @@ def SOdialog():
     global global_path
 
     local_path = dialog._open_dialog_file()
-    global_path = local_path
+    if local_path is not None and local_path != '':
+        global_path = local_path
     file_searcher = FileSearcher(local_path)
     file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
 

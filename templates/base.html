@@ -18,7 +18,7 @@
             <nav class="navbar">
                 <div class="container">
                     <div class="navbar-brand">
-                        <a class="navbar-item" href="#">
+                        <a class="navbar-item" href="{{ url_for('main.index') }}">
                             <img src="https:///upload.wikimedia.org/wikipedia/commons/9/92/Logo_mpmg.png" alt="MPMG" width="100">
                         </a>
                     </div>
@@ -43,13 +43,7 @@
                             {% if request.url_rule.endpoint == "main.search_analysis" %}
                             <a href="{{ url_for('main.new_analysis') }}" class="navbar-item">
                                 Nova Análise
-                            </a>
-                            {% endif %}
-                            {% endif %}
-                            {% if current_user.is_authenticated %}
-                            {% if request.url_rule.endpoint == "main.report" %}
-                            <a href="{{ url_for('main.new_analysis') }}" class="navbar-item">
-                                Voltar
+
                             </a>
                             {% endif %}
                             {% endif %}
@@ -78,7 +72,7 @@
 				  {% endif %}
 				{% endwith %}
                
-			   {% block content %}
+		{% block content %}
                {% endblock %}
             </div>
         </div>
