@@ -20,3 +20,18 @@ def _open_dialog_file():
 	root.destroy()
 
 	return file_name
+
+
+def _open_dialog_analysis():
+	file_types = [('Arquivos numpy', '*.npz')]
+	file_name = None
+	title = 'Selecione a análise:'
+
+	root = Tk()
+	root.withdraw()
+	root.filename = filedialog.askopenfilename(title=title, initialdir="./M08/log/",
+                                              filetypes=file_types)
+	file_name = root.filename
+	root.destroy()
+
+	return file_name

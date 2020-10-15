@@ -36,13 +36,41 @@ def index():
     return render_template('index.html')
 
 
+################# BUSCAR ANALISE #################
 
-@main.route('/log', methods=['POST', 'GET'])
+@main.route('/search_analysis', methods=['POST', 'GET'])
 @login_required
-def funcao_teste():
-#     flash(log_obj.buffer, 'log')
+def search_analysis():
+    return render_template('search_analysis.html', name=current_user.name, id_process=id_process,  
+                                                   buffer=log_obj.buffer)
+
+@main.route('/set_analysis')
+@login_required
+def set_analysis():
+    global log_obj
+    global id_process
+
+    analysis_path = dialog._open_dialog_analysis()
+    if analysis_path is not None and analysis_path != '':
+        idx = analysis_path.rfind('.')
+        id_process = os.path.basename(analysis_path)[:idx]
+        
+        log_obj.set_id(id_process)
+        
+        return jsonify(id_process=id_process)
+        
+    flash('Erro ao carregar arquivo.'.format(id_process), 'error')
     return redirect(url_for('main.new_analysis')) 
 
+################# NOVA ANALISE #################
+
+@main.route('/new_analysis', methods=['POST', 'GET'])
+@login_required
+def new_analysis():
+    if request.method == 'POST':
+        print(request.form['info3'])
+    return render_template('new_analysis.html', name=current_user.name, path=global_path, 
+                                                id_process=id_process, buffer=log_obj.buffer)
 
 @main.route('/SOdialog')
 @login_required
@@ -59,14 +87,6 @@ def SOdialog():
 
     return jsonify(path=global_path)
 
-@main.route('/new_analysis', methods=['POST', 'GET'])
-@login_required
-def new_analysis():
-    if request.method == 'POST':
-        print(request.form['info3'])
-    return render_template('new_analysis.html', name=current_user.name, path=global_path, 
-                                                id_process=id_process, buffer=log_obj.buffer)
-
 @main.route('/idprocess', methods=['GET','POST'])
 @login_required
 def IDset():
@@ -82,6 +102,13 @@ def IDset():
     log_obj.set_id(id_process)
     log_obj.send(('imprime', 'identificador {} definido com sucesso'.format(id_process)))
     return redirect(url_for('main.new_analysis')) 
+
+@main.route('/log', methods=['POST', 'GET'])
+@login_required
+def refresh_log():
+#     flash(log_obj.buffer, 'log')
+    return redirect(url_for('main.new_analysis')) 
+
 
 @main.route('/IMGprocessor', methods=['POST', 'GET'])
 @login_required
@@ -165,8 +192,3 @@ def IMGVIDreport():
     html_paths = [html_img, html_vid]
     return render_template('report.html', html=html_paths, name=current_user.name, 
                            id_report=id_process, path=global_path) 
-
-@main.route('/search_analysis', methods=['POST', 'GET'])
-@login_required
-def search_analysis():
-    return render_template('search_analysis.html')

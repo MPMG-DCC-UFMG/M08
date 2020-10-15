@@ -1,4 +1,177 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Buscar Análise</h1>
+<h1 class="title">
+  <section class="section has-background-link-light">
+    <div class="container">
+        <nav class="level pl-6 pr-6">
+            <div class="columns">
+                <div class="collumn is-fluid">
+                    <h3 class="subtitle is-3 has-text-left">Selecione o arquivo de análise, {{name}}</h3>
+
+                    <div class="file is-small is-info has-name is-fullwidth">
+                        <label class="file-label">
+                            <script>
+                                $(function(){
+                                    $("#input-folder").click(function(event){
+                                        $.getJSON('/set_analysis', { }, function(data){
+                                            $("#path-name").text(data.id_process)
+                                        });
+                                        return false;
+                                    });
+                                });
+                            </script>
+
+                            <a href="#" id="input-folder"><button class="file-input"></button></a>
+
+                            <span class="file-cta">
+                                <span class="file-icon">
+                                    <i class="fas fa-upload"></i>
+                                </span>
+
+                                <span class="file-label mr-5">
+                                    Selecione o arquivo
+                                </span>
+                            </span>
+
+                            <span class="file-name has-background-white pr-6 pl-6 mr-6" id="path-name">
+                                {{ id_process }}
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+</section>
+<section class="section has-background-white">
+    <div class="container is-fullwidth">
+        <div class="container has-background-link-light pb-6 pr-6 pl-6 ml-6 mr-6">
+
+			<h4 class="my-2 has-text-centered pt-3 pb-3">Relatórios</h4>
+
+			<button class="button has-background-info-dark has-text-white modal-button mb-5" style="width: 40%;" id="modalopen" data-target="modal" aria-haspopup="true">Configurações</button>
+
+			<div id="modal" class="modal">
+				<div class="modal-background" id="modalback"></div>
+				<div class="modal-card">
+					<header class="modal-card-head has-background-white">
+						<p class="modal-card-title">Configurações</p>
+					</header>
+
+					<section class="modal-card-body has-background-link-light">
+						<div class="container is-fullwidth">
+							<nav class="level">
+								<div class="level-left">
+									<div class="collumns">
+										<div class="collumn pl-3 pr-3 pb-6">
+											<h5 class="subtitle is-5 has-text-left pt-4 pb-2">Limite de idade:</h5>
+											<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Confiança na detecção de pornografia:</h5>
+											<h5 class="subtitle is-5 has-text-left">Confiança na detecção de face:</h5>
+										</div>
+									</div>
+								</div>
+
+								<div class="level-right">
+									<div class="collumns  ">
+										<div class="column mt-6 pt-6 pl-3 pr-3">
+											<form action="{{ url_for('main.search_analysis') }}" method="post">
+												<div class="control">
+													<div class="select is-fullwidth mb-2">
+														<select>
+															<option>Selecione</option>
+															<option>Idades 1</option>
+															<option>Idades 2</option>
+															<option>Idades 3</option>
+														</select>
+													</div>
+												</div>
+
+												<div class="control mb-2">
+													<input class="input mt-2" type="text" placeholder="Entre 0 e 1" name="conf_nsfw" />
+												</div>
+
+												<div class="control mb-3  ">
+													<input class="input mt-2" type="text" placeholder="Entre 0 e 1" name="conf_face"/>
+												</div>
+
+												<div class="control">
+													<button class="button has-background-info-dark has-text-white is-fullwidth mt-6" type="submit" value="Submit">Definir</button>
+												</div>
+											</form>
+										</div>
+									</div>
+								</div>
+							</nav>
+						</div>
+					</section>
+				</div>
+
+				<button class="modal-close is-large" id="modalclose" aria-label="close"></button>
+
+				<script>
+					$(document).ready(function(){
+						$("#modalopen").click(function(){
+							$("#modal").addClass("is-active");
+						});
+
+						$("#modalclose").click(function(){
+							$("#modal").removeClass("is-active");
+						});
+
+						$("#modalback").click(function(){
+							$("#modal").removeClass("is-active");
+						});
+
+					});
+				</script>
+			</div>
+			
+			<script>
+				$(function(){
+					$("#img-report").click(function(event){
+						$.getJSON('/IMGreport', { }, function(data){
+
+						});
+						return false;
+					});
+				});
+			</script>
+			
+			<div class="buttons is-centered">
+				<button id='img-report' class="button is-info" style="width: 40%;">Gerar Relatório de Imagens</button>
+			</div>
+			
+			<script>
+				$(function(){
+					$("#vid-report").click(function(event){
+						$.getJSON('/VIDreport', { }, function(data){
+
+						});
+						return false;
+					});
+				});
+			</script>
+			<div class="buttons is-centered">
+				<button id="vid-report" class="button is-info" style="width: 40%;">Gerar Relatório de Vídeos</button>
+			</div>
+
+			<script>
+				$(function(){
+					$("#imgvid-report").click(function(event){
+						$.getJSON('/IMGVIDreport', { }, function(data){
+
+						});
+						return false;
+					});
+				});
+			</script>
+			<div class="buttons is-centered">
+				<button id="imgvid-report" class="button is-info" style="width: 40%;">Gerar Relatório de Todos</button>
+			</div>
+	
+		
+        </div>
+    </div>
+</section>
+
 {% endblock %}

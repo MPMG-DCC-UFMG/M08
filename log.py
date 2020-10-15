@@ -25,9 +25,11 @@ class Log():
         self.results  = {'images': [], 'videos': []}
         self.buffer  = ''
     
-    def set_id(self, id_analysis):
+    def set_id(self, id_analysis, empty=True):
         self.id_analysis = id_analysis
         self.result_file = os.path.join(self.log_path, id_analysis)
+        
+        if not empty: self.result_file += '.npz'
         
     def send(self, tup):
         
