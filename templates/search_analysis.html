@@ -126,47 +126,16 @@
 				</script>
 			</div>
 			
-			<script>
-				$(function(){
-					$("#img-report").click(function(event){
-						$.getJSON('/IMGreport', { }, function(data){
-
-						});
-						return false;
-					});
-				});
-			</script>
-			
 			<div class="buttons is-centered">
-				<button id='img-report' class="button is-info" style="width: 40%;">Gerar Relatório de Imagens</button>
-			</div>
-			
-			<script>
-				$(function(){
-					$("#vid-report").click(function(event){
-						$.getJSON('/VIDreport', { }, function(data){
-
-						});
-						return false;
-					});
-				});
-			</script>
-			<div class="buttons is-centered">
-				<button id="vid-report" class="button is-info" style="width: 40%;">Gerar Relatório de Vídeos</button>
+				<a href="{{ url_for('main.IMGreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Imagens</a>
 			</div>
 
-			<script>
-				$(function(){
-					$("#imgvid-report").click(function(event){
-						$.getJSON('/IMGVIDreport', { }, function(data){
-
-						});
-						return false;
-					});
-				});
-			</script>
 			<div class="buttons is-centered">
-				<button id="imgvid-report" class="button is-info" style="width: 40%;">Gerar Relatório de Todos</button>
+				<a href="{{ url_for('main.IMGreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Vídeos</a>
+			</div>
+
+			<div class="buttons is-centered">
+				<a href="{{ url_for('main.IMGreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Todos</a>
 			</div>
 	
 		

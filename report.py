@@ -25,44 +25,48 @@ class Report():
     def generate_img(self, return_path=True):
         
         self.results  = {'Arquivo': [], 'Probabilidade NSFW': [], 'Número de Faces': [], 'Confiança Faces': [],  
-                         'Faixas de Idade': [], 'Detector Criança': [], 'Classe': [], 'Tempo de Análise': []}
+                         'Faixas de Idade': [], 'Detector Criança': [], 'Classe': []}
         
         results = self.logfile['images']
         
         for result in results:      
             classes = ''
             self.results['Arquivo'].append(result['Arquivo'])
-            self.results['Tempo de Análise'].append(round(result['Tempo de Análise'], 2))
+#             self.results['Tempo de Análise'].append(round(result['Tempo de Análise'], 2))
 
-            nsfw = round(result['data'][self.res_order.index('prob_nsfw')], 3)
+            nsfw = round(result['data']['prob_nsfw'], 3)
             self.results['Probabilidade NSFW'].append(nsfw)
             if nsfw >= self.conf_nsfw: classes += '-NSFW'
             
-            self.results['Número de Faces'].append(result['data'][self.res_order.index('cont_age')])
+            self.results['Número de Faces'].append(len(result['data']['conf_faces']))
 
-            conf_face = result['data'][self.res_order.index('conf_faces')]
+            conf_face = result['data']['conf_faces']
             self.results['Confiança Faces'].append([round(conf, 3) for conf in conf_face])
 
-            idx_age = result['data'][self.res_order.index('idx_age_pred')]
-            if idx_age is None: self.results['Faixas de Idade'].append(None)
+            
+            idx_age = result['data']['prob_age']
+            if idx_age is None or idx_age == '': self.results['Faixas de Idade'].append(None)
             else: 
+                idx_age = np.argmax(idx_age, axis=-1)
                 self.results['Faixas de Idade'].append([self.ageclasses[age] for age in idx_age])
                 if sum(idx_age <= self.max_age) > 0: classes += '-Criança' 
            
-            idx_child = result['data'][self.res_order.index('idx_child_pred')]
-            if idx_child is None: self.results['Detector Criança'].append(None)
-            else: self.results['Detector Criança'].append([False if child == 1 else True for child in idx_child])
+            idx_child = result['data']['prob_child']
+            if idx_child is None or idx_child == '': self.results['Detector Criança'].append(None)
+            else:
+                idx_child = np.argmax(idx_child, axis=-1)
+                self.results['Detector Criança'].append([False if child == 1 else True for child in idx_child])
                 
             self.results['Classe'].append(classes)
 
-        report = self.html_style()
+        report, table_id = self.html_style()
         
         if return_path:
             html_path = os.path.join(self.savepath, self.filename+'.html') 
             report.to_html(html_path)
-            return html_path
+            return html_path, table_id
         else:
-            return report
+            return report, table_id
     
     def generate_vid_summary(self, return_path=True):
         
@@ -96,14 +100,14 @@ class Report():
         
             self.results['Classe'].append(classes)
             
-        report = self.html_style()
+        report, table_id = self.html_style()
         
         if return_path:
             html_path = os.path.join(self.savepath, self.filename+'.html') 
             report.to_html(html_path)
-            return html_path
+            return html_path, table_id
         else:
-            return report
+            return report, table_id
         
     def generate_vid_perframe(self, filename):
         pass ########## TODO
@@ -155,8 +159,11 @@ class Report():
                            .format({'Arquivo': self.make_clickable})
                            .set_table_styles(styles))
 
-        html = log_style.render()
-        return html
+        html = log_style.render(table_id=self.filename)
+        
+        idx = html.find('table id="')
+        table_id = html[idx:].split('\"')[1]
+        return html, '#' + table_id
         
 
     def make_clickable(self, url):

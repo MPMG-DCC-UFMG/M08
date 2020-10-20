@@ -1,236 +1,208 @@
-import sys
-import datetime
-import time
+import sys, os, cv2
+import datetime, time
 import numpy as np
-import os.path
-import cv2
-from faces import get_faces_mtcnn
-from configcnn import ConfigCNN
 import random
 
+import tensorflow as tf
+from tensorflow.data import Dataset
+from keras.models import model_from_json
+from keras.backend.tensorflow_backend import set_session
+
+from filesearcher import FileSearcher
+from log import Log
+from faces import get_faces_mtcnn
+from configcnn import ConfigCNN
+from mtcnn_local.mtcnn import MTCNN
+from tf_open_nsfw.model import OpenNsfwModel, InputType
+
+
 class ImageProcessor():
-
-    def __init__(self, files_dict):
+    
+    def __init__(self, files_dict, log):
         self.file_names = list(files_dict.keys())
-        self.timing = {"detect_faces": [], "get_faces_mtcnn2": [], "nsfw": [], "age": [], "all": []}
-
-    def conv_pred(self, p, verbose=False):
-        if p.shape[-1] > 1:
-            p = p.argmax(axis=-1)
-        else:
-            if verbose:
-                print("convpred p.shape <= 1")
-            p = (proba > 0.5).astype('int32')
-        return p
-
-    def get_data_and_predictions2(self, file_name, model_age, sess, model_nsfw, fn_load_image,
-                                  detector, timing, child_conn, verbose=False):
-
-        if not os.path.isfile(file_name):
-            print("not os.path.isfile({:})".format(file_name))
-            return 0, 0, None, None, -1., None, None, [], []
-        cont = 0
-        img_work = None
-        try:
-            img_work = cv2.imread(file_name)
-        except Exception as ex:
-            if verbose:
-                child_conn.send(("imprime", "Erro em cv2.imread: {:}".format(img_name)))
-                print(ex)
-            return 0, 0, None, None, -1., None, None, [], []
-
-        if img_work is None:
-            if verbose: child_conn.send(("imprime", "img_work=None em cv2.imread: {:}".format(img_name)))
-            return 0, 0, None, None, -1., None, None, [], []
-
-        shape_img = img_work.shape
+        self.log = log
         
-        min_dim = min(shape_img[0], shape_img[1])
-        if min_dim < 30:
-            print("min_dim < 30")
-            return 0, 0, None, None, 0., None, None, [], []
+        # Models
+        self.detector = detector = MTCNN() # intialized
+        tf.reset_default_graph()
+        self.model_nsfw = OpenNsfwModel()
+        self.model_age  = model_from_json(open(ConfigCNN.model_architecture).read())
 
-        max_dim = max(shape_img[0], shape_img[1])
-        if max_dim < 60:
-            print("max_dim < 60")
-            return 0, 0, None, None, 0., None, None, [], []
-
-        lim_inferior = max(720, max_dim)
-        if lim_inferior > max_dim:
-            new_shape_img = (int((shape_img[1] * lim_inferior) / max_dim),
-                             int((shape_img[0] * lim_inferior) / max_dim))
-            img_work = cv2.resize(img_work, new_shape_img, interpolation=cv2.INTER_AREA)
-#             print("upscaled")
-        else:
-            lim_superior = min(1440, max_dim)
-            if max_dim > 1440 and lim_superior < max_dim:
-                new_shape_img = (int((shape_img[1] * lim_superior) / max_dim),
-                                 int((shape_img[0] * lim_superior) / max_dim))
-                img_work = cv2.resize(img_work, new_shape_img, interpolation=cv2.INTER_AREA)
-#                 print("downscaled")
-            else:
-                new_shape_img = shape_img
-#                 print("not scaled")
-
-        img_work = cv2.cvtColor(img_work, cv2.COLOR_BGR2RGB)
-        area_total = img_work.shape[0] * img_work.shape[1]
-
-        t1 = datetime.datetime.now()
-        faces = []
-#         try:
-            #print(shape_img, img_work.shape, img_name)
-        faces = get_faces_mtcnn(img_work, detector, timing["detect_faces"])
-#         except Exception as e:
-#             print("Erro em mtcnn", e)
-#             print(base_path, img_name)
-#             print(img_work.shape)
-#             raise Exception(e)
-
-        t2 = datetime.datetime.now()
-        timing["get_faces_mtcnn2"].append((t2 - t1).total_seconds())
-
-        tf1 = datetime.datetime.now()
-        adj_faces = []
-        coordinates = []
-        conf_faces = []
-        for tp in faces:
-            fc, coord, confid_face = tp
-            area_face = (coord[2] - coord[0]) * (coord[3] - coord[1])
-            prop_x = (coord[3] - coord[1]) / new_shape_img[1]
-            if area_face < 1200 and prop_x < 0.06:
-                continue
-            coordinates.append(coord)
-            conf_faces.append(confid_face)
-            cont += 1
-
-            adj_face = cv2.resize(fc, (ConfigCNN.window_size[0] + 4, ConfigCNN.window_size[1] + 4), interpolation=cv2.INTER_AREA)
-            adj_faces.append(adj_face[2:-2, 2:-2])
-
-        tf2 = t1 = datetime.datetime.now()
-
-        prob_nsfw = -1.0
-        try:
-            image = fn_load_image(file_name)
-            predictions = sess.run(model_nsfw.predictions, feed_dict={model_nsfw.input: image})
-            prob_nsfw = predictions[0][1]
-        except Exception as ex:
-            if verbose:
-                child_conn.send(("imprime", "erro model_nsfw.predictions em: {:}".format(img_name)))
-                print(ex)
-
-        t2 = datetime.datetime.now()
-        timing["nsfw"].append((t2 - t1).total_seconds())
-
-        age_pred = None
-        child_pred = None
-        idx_age_pred = None
-        idx_child_pred = None
-        all_preds = []
-        if cont > 0:
-            # predict
-            t1 = datetime.datetime.now()
-            all_preds = model_age.predict(np.array(adj_faces).astype('float32') / 255.)
-            t2 = datetime.datetime.now()
-            timing["age"].append((tf2 - tf1 + t2 - t1).total_seconds())
-            age_pred = all_preds[0]
-            child_pred = all_preds[1]
-            idx_age_pred = self.conv_pred(all_preds[0])
-            idx_child_pred = self.conv_pred(all_preds[1])
-            cont_age = len(idx_age_pred[idx_age_pred < len(ConfigCNN.classes)])
-            cont_faixa = len(idx_child_pred[idx_child_pred < len(ConfigCNN.faixa_child_adult)])
-        else:
-            cont_age = cont_faixa = 0
-
-        return (cont_age, cont_faixa, age_pred, child_pred, prob_nsfw, idx_age_pred, idx_child_pred, all_preds,conf_faces)
-
-    def process(self, use_gpu, total_processes, child_conn, verbose=False):
-
-        from keras import backend as K
-        import tensorflow as tf
-        from keras.backend.tensorflow_backend import set_session
-        from keras.models import model_from_json
+        self.batch_faces= {}
+        self.conf_faces = {}
+        
+        self.VGG_MEAN = [104, 117, 123]
+        self.nsfw_size = (256, 256)
+    
+    
+    def process(self, batch_size=64, use_gpu=True):
+        self.log.send(("imprime", 'Iniciando processamento de imagens. ' +  
+                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
+        
+        # criando dataset para quebrar em batches
+        dataset = Dataset.from_tensor_slices(self.file_names)
+        dataset = dataset.map(lambda filename: tuple(tf.py_func(
+                            self.load_img, [filename], (tf.uint8, filename.dtype)) ) )
+        dataset = dataset.map(self.nsfw_preprocess).batch(batch_size)
 
         config = tf.ConfigProto()
-        child_conn.send(("imprime", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
-
-        if use_gpu:
-            fracao = {1: 0.770, 2: 0.380, 3: 0.26, 4: 0.19}
-            config.gpu_options.per_process_gpu_memory_fraction = fracao[total_processes]
-        else:
-            config = tf.ConfigProto(intra_op_parallelism_threads=1,
-                                    inter_op_parallelism_threads=1, allow_soft_placement=True)
-
         sess = tf.Session(config=config)
         set_session(sess)
-        
-        from mtcnn_local.mtcnn import MTCNN
-        from tf_open_nsfw.model import OpenNsfwModel, InputType
-        from tf_open_nsfw.image_utils import create_tensorflow_image_loader
-        from tf_open_nsfw.image_utils import create_yahoo_image_loader
 
-        detector = MTCNN()
-
-        tf.reset_default_graph()
-        model_nsfw = OpenNsfwModel()
-        image_loader = ConfigCNN.IMAGE_LOADER_YAHOO
-        input_type = InputType.TENSOR
-        weights_path = ConfigCNN.nsfw_weights_path
-
+        iteration = 0
         with sess:
-            model_nsfw.build(weights_path=weights_path, input_type=input_type)
-            fn_load_image = None
-            if input_type == InputType['TENSOR']:
-                if image_loader == ConfigCNN.IMAGE_LOADER_TENSORFLOW:
-                    fn_load_image = create_tensorflow_image_loader(sess)
-                else:
-                    fn_load_image = create_yahoo_image_loader()
+            
+            # intialize models (expect MTCNN)
+            self.model_nsfw.build(weights_path=ConfigCNN.nsfw_weights_path, 
+                              input_type=InputType.TENSOR)
             sess.run(tf.global_variables_initializer())
+            
+            self.model_age.load_weights(ConfigCNN.model_weights)
+            self.log.send(("imprime", 'Todos os modelos foram carregados. ' +  
+                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
+            
+            iterator = dataset.make_one_shot_iterator()
+            
+            while True:
+                try:
+                    # Face detection runs here (self.load_img)
+                    Xdata, filenames = sess.run(iterator.get_next())
+                    
+                    # NSFW predictions
+                    prob_nsfw = sess.run(self.model_nsfw.predictions, feed_dict={self.model_nsfw.input: Xdata})
+                    
+                    # Age predictions
+                    faces = np.concatenate(list(self.batch_faces.values()), axis=0)
+                    predictions = self.model_age.predict(faces)
+                    
+                    # store batch predictions
+                    num_faces = [len(v) for v in self.batch_faces.values()]
+                    batch_idx = np.append([0], np.cumsum(num_faces))
 
-            model_age = model_from_json(open(ConfigCNN.model_architecture).read())
-            model_age.load_weights(ConfigCNN.model_weights)
-            t0 = datetime.datetime.now()
-            child_conn.send(("imprime", "Modelos carregados. Inicia processamento de imagens."))
+                    count_imgs = 0
+                    for k, filename in enumerate(filenames):
+                        result = {'prob_nsfw': '', 'conf_faces': '', 'prob_age': '', 
+                                  'prob_child':'', 'prob_gender': ''}
+                        
+                        filename = filename.decode("utf-8")
+                        
+                        result['prob_nsfw'] = prob_nsfw[k][1]
+                        
+                        if filename in self.batch_faces.keys():
+                            idx = (batch_idx[count_imgs], num_faces[count_imgs])
+                            result['conf_faces']  = self.conf_faces[filename] 
+                            result['prob_age']    = predictions[0][idx[0]:idx[0]+idx[1]]
+                            result['prob_child']  = predictions[1][idx[0]:idx[0]+idx[1]]
+                            result['prob_gender'] = predictions[2][idx[0]:idx[0]+idx[1]]
+                            count_imgs += 1
+                    
+                        self.log.send( ("data_file", filename, result) )
+                    
+                    iteration += len(filenames)
+                    percentage = float(iteration)/len(self.file_names)
+                    self.log.send(("imprime", 'Progresso {:.0f}%: '.format(percentage*100) + 
+                                                 '|{:25}|'.format('#'*int(25*percentage)) +  
+                                                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")
+                                    ))   
+                except tf.errors.OutOfRangeError:
+                    self.log.send(("imprime", 'Finalizado o processamento de imagens' + 
+                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
+                    
+                    self.log.send(("finish",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
+                    break
+                except (KeyboardInterrupt, SystemExit):
+                    self.log.send(("imprime", 'Processamento interrompido manualmente' +  
+                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
+                    
+                    self.log.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
+                    raise
+            
+    
+    def load_img(self, filename):
 
-            abort = False
-            del_mtcnn = 0
-            child_conn.send(('imprime','Iniciando análise de imagens - {}'.format(
-                                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")) ))
-            for k, target_file in enumerate(sorted(self.file_names)):
-                print('\rProcessando imagem {0}/{1}'.format(k, len(self.file_names)), end='', flush=True )
+        filename = filename.decode()
+        default_return = np.zeros((100,100,3), dtype=np.int8)
+        
+        if not os.path.isfile(filename):
+            self.log.send( ("imprime", "Arquivo não encontrado: {:}".format(filename)) )
+            return default_return
+        
+        try:
+            img = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        except Exception as ex:
+            self.log.send(("imprime","Erro ao ler o arquivo {:}:{:}".format(filename, ex)))
+            return default_return
+
+        if img is None:
+            self.log.send(("imprime","Erro ao ler o arquivo {:}".format(filename)))
+            return default_return
+
+        shape_img = img.shape
+        # fix channels
+        if len(shape_img) < 3: img = np.stack((img,)*3, axis=-1)
+        elif shape_img[2] != 3: img = img[:,:,:3]
+        shape_img = img.shape
+        
+        new_shape_img = shape_img
+        min_dim, max_dim = min(shape_img[0], shape_img[1]), max(shape_img[0], shape_img[1])
+        if min_dim < 30 or max_dim < 60:
+            self.log.send(("imprime","Imagem é muito pequena {:}".format(filename)))
+            return default_return
+
+        lim_inferior, lim_superior = 720, 1440
+        if not ( (max_dim > lim_inferior) and (max_dim < lim_superior) ):
+            scale_factor = lim_inferior if (lim_inferior/max_dim) > 1 else lim_superior
+            scale_factor /= max_dim
+            new_shape_img = (int(shape_img[0] * scale_factor),
+                             int(shape_img[1] * scale_factor) )
+#             print('{:} rescaled by {:.2f}. Original size: {:}, New size: {:}'.format(filename,scale_factor, shape_img, new_shape_img))
+
+        
+        #### ARMAZENANDO FACES ####
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        faces = get_faces_mtcnn(img, self.detector)
+        
+        if len(faces) > 0:
+            self.conf_faces[filename]  = []
+            self.batch_faces[filename] = []
+            for tp in faces:
+                fc, coord, confid_face = tp
                 
-                if target_file[-3:] == 'txt': continue
+                fc = cv2.resize(fc, (ConfigCNN.window_size[0], ConfigCNN.window_size[1]), interpolation=cv2.INTER_AREA)
+                self.conf_faces[filename].append(confid_face)
+                self.batch_faces[filename].append(fc)    
+        
+            self.batch_faces[filename] = np.array(self.batch_faces[filename]).astype('float32') / 255.
+        
+        img = cv2.resize(img, self.nsfw_size, interpolation=cv2.INTER_LINEAR)
+        return img, filename
+    
+    def nsfw_preprocess(self, npy, filename):        
+        
+        npy.set_shape([None, None, None])
+        image = tf.image.convert_image_dtype(npy, tf.float32, saturate=True)
 
-                if not os.path.isfile(target_file): continue
-                t3 = datetime.datetime.now()
-                res = self.get_data_and_predictions2(target_file, model_age, sess, model_nsfw, 
-                                                     fn_load_image,detector, self.timing, child_conn, verbose)
-                time.sleep(random.randint(1,10)/1000)
-                t4 = datetime.datetime.now()
-                tempo = (t4 - t3).total_seconds()
+        image = tf.image.resize_images(image, self.nsfw_size,
+                                       method=tf.image.ResizeMethod.BILINEAR,
+                                       align_corners=True)
+        
+        image = tf.image.convert_image_dtype(image, tf.uint8, saturate=True)
+        
+        image = tf.image.encode_jpeg(image, format='', quality=75,
+                                     progressive=False, optimize_size=False,
+                                     chroma_downsampling=True,
+                                     density_unit=None,
+                                     x_density=None, y_density=None,
+                                     xmp_metadata=None)
 
-                child_conn.send(("data_file", target_file, res, tempo))
-                del_mtcnn += 1
+        image = tf.image.decode_jpeg(image, channels=3,
+                                     fancy_upscaling=False,
+                                     dct_method="INTEGER_ACCURATE")
 
+        image = tf.cast(image, dtype=tf.float32)
 
-            child_conn.send(("imprime", '{} - {}'.format("Finalizado",
-                                                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z"))))
-            try:
-                child_conn.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
-            except Exception as e:
-                print("erro finish")
-            child_conn.send(('imprime', 'Análise de imagens completa. Verifique o log em caso de erros.'))
+        image = tf.image.crop_to_bounding_box(image, 16, 16, 224, 224)
 
-
-        try:
-            #print("del models")
-            del detector
-            del model_nsfw
-        except Exception as e:
-            print("ex del models")
-
-        try:
-            #print("K.clear_session()")
-            K.clear_session()
-        except Exception as e:
-            print("excecao K.clear_session()")
-        time.sleep(1)
+        image = tf.reverse(image, axis=[2])
+        image -= self.VGG_MEAN
+        return image, filename

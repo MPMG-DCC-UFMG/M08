@@ -60,7 +60,7 @@ class Log():
             result = {}
             result['Arquivo'] = tup[1]
             result['data'] = tup[2]
-            result['Tempo de Análise'] = tup[3]
+            result['Tempo de Análise'] = 0.0
                
             self.results['images'].append(result)
         

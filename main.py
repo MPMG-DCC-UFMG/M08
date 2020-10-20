@@ -17,7 +17,7 @@ from report import Report
 from log import Log
 
 from flask import Blueprint, render_template, request, jsonify,\
-                    flash, redirect, url_for
+                    flash, redirect, url_for, render_template_string
 from . import db
 from . import dialog
 from flask_login import login_required, current_user
@@ -120,8 +120,8 @@ def IMGprocessor():
         flash('Defina o identificador da análise.'.format(id_process), 'error')
         return redirect(url_for('main.new_analysis')) 
     
-    img_proc = ImageProcessor(file_searcher.files["images"])
-    img_proc.process(True, 1, log_obj)
+    img_proc = ImageProcessor(file_searcher.files["images"], log_obj)
+    img_proc.process(batch_size=10)
     return '', 204
 
 @main.route('/VIDprocessor')
@@ -148,8 +148,8 @@ def IMGVIDprocessor():
         flash('Defina o identificador da análise.'.format(id_process), 'error')
         return redirect(url_for('main.new_analysis')) 
     
-    img_proc = ImageProcessor(file_searcher.files["images"])
-    img_proc.process(True, 1, log_obj)
+    img_proc = ImageProcessor(file_searcher.files["images"], log_obj)
+    img_proc.process(batch_size=10)
     vid_proc = VideoProcessor(file_searcher.files["videos"])
     vid_proc.process(log_obj)
     return '', 204
@@ -158,23 +158,40 @@ def IMGVIDprocessor():
 @login_required
 def IMGreport():
     global log_obj
+    global id_process
+
+    with open('./M08/templates/report_header.html', 'r') as f:
+        header = f.read()
+    
+    if log_obj.result_file is None:
+        flash('A análise {} não possui arquivo resultado. Ela foi processada?'.format(log_obj.id_analysis))
+        return redirect(url_for('main.new_analysis')) 
     
     img_report = Report(log_obj.log_path, log_obj.result_file) 
-    html_path = img_report.generate_img(return_path=False)
-    
-    return render_template('report.html', html=[html_path], name=current_user.name, 
-                           id_report=id_process, path=global_path) 
+    conteudo, id_tabela = img_report.generate_img(return_path=False)
+
+    return render_template_string(header+conteudo+'{% endblock %}', id_report = id_process, 
+                                  id_tabela=id_tabela, name=current_user.name, path=log_obj.log_path)
+
     
 @main.route('/VIDreport', methods=['POST', 'GET'])
 @login_required
 def VIDreport():
     global log_obj
+    global id_process
+
+    with open('./M08/templates/report_header.html', 'r') as f:
+        header = f.read()
+    
+    if log_obj.result_file is None:
+        flash('A análise {} não possui arquivo resultado. Ela foi processada?'.format(log_obj.id_analysis))
+        return redirect(url_for('main.new_analysis')) 
     
     vid_report = Report(log_obj.log_path, log_obj.result_file) 
-    html_path = img_report.generate_vid_summary(return_path=False)
-    
-    return render_template('report.html', html=[html_path], name=current_user.name, 
-                           id_report=id_process, path=global_path) 
+    conteudo, id_tabela = vid_report.generate_vid_summary(return_path=False)
+
+    return render_template_string(header+conteudo+'{% endblock %}', id_report = id_process, 
+                                  id_tabela=id_tabela, name=current_user.name, path=log_obj.log_path)
 
 @main.route('/IMGVIDreport', methods=['POST', 'GET'])
 @login_required
