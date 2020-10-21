@@ -28,12 +28,8 @@ class ImageProcessor():
         self.model_nsfw = OpenNsfwModel()
         self.model_age  = model_from_json(open(ConfigCNN.model_architecture).read())
 
-        self.batch_faces= {}
-        self.conf_faces = {}
-        
         self.VGG_MEAN = [104, 117, 123]
         self.nsfw_size = (256, 256)
-    
     
     def process(self, batch_size=64, use_gpu=True):
         self.log.send(("imprime", 'Iniciando processamento de imagens. ' +  
@@ -42,8 +38,10 @@ class ImageProcessor():
         # criando dataset para quebrar em batches
         dataset = Dataset.from_tensor_slices(self.file_names)
         dataset = dataset.map(lambda filename: tuple(tf.py_func(
-                            self.load_img, [filename], (tf.uint8, filename.dtype)) ) )
-        dataset = dataset.map(self.nsfw_preprocess).batch(batch_size)
+                            self.load_img, [filename], (tf.uint8, tf.float64, tf.float64, filename.dtype)) ))
+        dataset = dataset.filter(lambda img, faces, conf, filename: tf.math.not_equal(filename,tf.constant('')))
+        dataset = dataset.map(self.nsfw_preprocess)
+        dataset = dataset.map(self.faces_ragged).map(self.conf_ragged).batch(batch_size)
 
         config = tf.ConfigProto()
         sess = tf.Session(config=config)
@@ -65,21 +63,28 @@ class ImageProcessor():
             
             while True:
                 try:
-                    # Face detection runs here (self.load_img)
-                    Xdata, filenames = sess.run(iterator.get_next())
+                    start = time.time()
                     
-                    # NSFW predictions
+                    ### Face detection runs here (self.load_img)
+                    Xdata, Xfaces, conf_faces, filenames = sess.run(iterator.get_next())
+                    
+                    ### NSFW predictions
                     prob_nsfw = sess.run(self.model_nsfw.predictions, feed_dict={self.model_nsfw.input: Xdata})
                     
-                    # Age predictions
-                    faces = np.concatenate(list(self.batch_faces.values()), axis=0)
-                    predictions = self.model_age.predict(faces)
-                    
-                    # store batch predictions
-                    num_faces = [len(v) for v in self.batch_faces.values()]
-                    batch_idx = np.append([0], np.cumsum(num_faces))
+                    ### Age predictions                    
+                    Xfaces = tf.squeeze(Xfaces, axis=1)
+                    conf_faces = sess.run(tf.squeeze(conf_faces, axis=1).flat_values)
+                    idx = sess.run(Xfaces.row_splits)
 
-                    count_imgs = 0
+                    if -1 in conf_faces: 
+                        mask = tf.math.not_equal( conf_faces, tf.constant(-1.) )
+                        Xfaces = sess.run(tf.boolean_mask(Xfaces.flat_values, mask))
+                        predictions = self.model_age.predict(Xfaces)
+                    else:
+                        predictions = self.model_age.predict(sess.run(Xfaces.flat_values))
+                        
+                    # store batch predictions
+                    j = 0 # count predictions
                     for k, filename in enumerate(filenames):
                         result = {'prob_nsfw': '', 'conf_faces': '', 'prob_age': '', 
                                   'prob_child':'', 'prob_gender': ''}
@@ -88,20 +93,22 @@ class ImageProcessor():
                         
                         result['prob_nsfw'] = prob_nsfw[k][1]
                         
-                        if filename in self.batch_faces.keys():
-                            idx = (batch_idx[count_imgs], num_faces[count_imgs])
-                            result['conf_faces']  = self.conf_faces[filename] 
-                            result['prob_age']    = predictions[0][idx[0]:idx[0]+idx[1]]
-                            result['prob_child']  = predictions[1][idx[0]:idx[0]+idx[1]]
-                            result['prob_gender'] = predictions[2][idx[0]:idx[0]+idx[1]]
-                            count_imgs += 1
-                    
+                        if conf_faces[idx[k]] != -1.:
+                            num_faces = idx[k+1] - idx[k]
+                            result['conf_faces']  = conf_faces[idx[k]:idx[k+1]] 
+                            result['prob_age']    = predictions[0][j:j+num_faces]
+                            result['prob_child']  = predictions[1][j:j+num_faces]
+                            result['prob_gender'] = predictions[2][j:j+num_faces]
+                            j += num_faces
+
                         self.log.send( ("data_file", filename, result) )
                     
+                    end = time.time()
                     iteration += len(filenames)
                     percentage = float(iteration)/len(self.file_names)
-                    self.log.send(("imprime", 'Progresso {:.0f}%: '.format(percentage*100) + 
-                                                 '|{:25}|'.format('#'*int(25*percentage)) +  
+                    self.log.send(("imprime", 'Progresso {:.0f}%: '.format(percentage*100)  + 
+                                                 '|{:25}| '.format('#'*int(25*percentage))   +  
+                                                 'Tempo decorrido:{:.3f}, '.format(end-start) +
                                                  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")
                                     ))   
                 except tf.errors.OutOfRangeError:
@@ -116,29 +123,30 @@ class ImageProcessor():
                     
                     self.log.send(("finish", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))
                     raise
-            
     
     def load_img(self, filename):
 
         filename = filename.decode()
-        default_return = np.zeros((100,100,3), dtype=np.int8)
+        default_img  = np.zeros((1,self.nsfw_size[0],self.nsfw_size[1],3), dtype=np.uint8)
+        default_face = np.zeros((1,ConfigCNN.window_size[0],ConfigCNN.window_size[0],3))
+        default_conf = [-1.]
         
         if not os.path.isfile(filename):
             self.log.send( ("imprime", "Arquivo não encontrado: {:}".format(filename)) )
-            return default_return
+            return default_img, default_face, default_conf, ''
         
         try:
             img = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
         except Exception as ex:
-            self.log.send(("imprime","Erro ao ler o arquivo {:}:{:}".format(filename, ex)))
-            return default_return
+            self.log.send(("imprime","Erro ao ler o arquivo {:}: {:}".format(filename, ex)))
+            return default_img, default_face, default_conf, ''
 
         if img is None:
             self.log.send(("imprime","Erro ao ler o arquivo {:}".format(filename)))
-            return default_return
+            return default_img, default_face, default_conf, ''
 
-        shape_img = img.shape
         # fix channels
+        shape_img = img.shape
         if len(shape_img) < 3: img = np.stack((img,)*3, axis=-1)
         elif shape_img[2] != 3: img = img[:,:,:3]
         shape_img = img.shape
@@ -147,7 +155,7 @@ class ImageProcessor():
         min_dim, max_dim = min(shape_img[0], shape_img[1]), max(shape_img[0], shape_img[1])
         if min_dim < 30 or max_dim < 60:
             self.log.send(("imprime","Imagem é muito pequena {:}".format(filename)))
-            return default_return
+            return default_img, default_face, default_conf, ''
 
         lim_inferior, lim_superior = 720, 1440
         if not ( (max_dim > lim_inferior) and (max_dim < lim_superior) ):
@@ -162,22 +170,40 @@ class ImageProcessor():
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         faces = get_faces_mtcnn(img, self.detector)
         
+        faces_list, conf_list = [], []
         if len(faces) > 0:
-            self.conf_faces[filename]  = []
-            self.batch_faces[filename] = []
             for tp in faces:
                 fc, coord, confid_face = tp
+                conf_list.append(confid_face)
                 
                 fc = cv2.resize(fc, (ConfigCNN.window_size[0], ConfigCNN.window_size[1]), interpolation=cv2.INTER_AREA)
-                self.conf_faces[filename].append(confid_face)
-                self.batch_faces[filename].append(fc)    
-        
-            self.batch_faces[filename] = np.array(self.batch_faces[filename]).astype('float32') / 255.
-        
+                faces_list.append(fc.astype('float64') / 255.)
+        else: 
+            faces_list = default_face
+            conf_list  = default_conf
+            
         img = cv2.resize(img, self.nsfw_size, interpolation=cv2.INTER_LINEAR)
-        return img, filename
+        return img, faces_list, conf_list, filename
     
-    def nsfw_preprocess(self, npy, filename):        
+    
+    def conf_ragged(self, image, faces, conf_npy, filename):
+        conf = tf.ragged.stack(conf_npy)
+        conf.set_shape([None, None, None])
+        conf = tf.RaggedTensor.from_tensor(conf)
+        conf = tf.cast(conf, dtype=tf.float32)
+        return image, faces, conf, filename
+        
+    
+    def faces_ragged(self, image, faces_npy, conf, filename):
+        faces = tf.ragged.stack(faces_npy)
+        faces.set_shape([None, None, None, None, None, None])  
+        faces = tf.RaggedTensor.from_tensor(faces)
+        faces = tf.cast(faces, dtype=tf.float32)
+
+        return image, faces, conf, filename
+        
+    
+    def nsfw_preprocess(self, npy, faces, conf, filename):        
         
         npy.set_shape([None, None, None])
         image = tf.image.convert_image_dtype(npy, tf.float32, saturate=True)
@@ -205,4 +231,4 @@ class ImageProcessor():
 
         image = tf.reverse(image, axis=[2])
         image -= self.VGG_MEAN
-        return image, filename
+        return image, faces, conf, filename
