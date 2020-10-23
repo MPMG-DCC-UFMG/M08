@@ -126,9 +126,7 @@ def IMGprocessor():
         return redirect(url_for('main.new_analysis')) 
         
     img_proc = ImageProcessor(file_searcher.files["images"], log_obj)
-    start = time.time()
-    img_proc.process(batch_size=1)
-    print('\n\nTempo:', time.time()-start)
+    img_proc.process(batch_size=32)
     return '', 204
 
 @main.route('/VIDprocessor')
@@ -156,7 +154,7 @@ def IMGVIDprocessor():
         return redirect(url_for('main.new_analysis')) 
     
     img_proc = ImageProcessor(file_searcher.files["images"], log_obj)
-    img_proc.process(batch_size=128)
+    img_proc.process(batch_size=32)
     vid_proc = VideoProcessor(file_searcher.files["videos"])
     vid_proc.process(log_obj)
     return '', 204

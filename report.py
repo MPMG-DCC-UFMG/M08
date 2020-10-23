@@ -3,101 +3,64 @@ import pandas as pd
 import numpy as np
 import os, re
 
-
-class Report():
-    def __init__(self, rootpath, filename, conf_nsfw=0.3, max_age=13,):
-        
+class Report:
+    
+    def __init__(self, rootpath, filename, conf_age=0.8, conf_child=0.6, conf_face=0.8, conf_nsfw=0.3):
         self.savepath = rootpath
         self.filename = filename[:-4]
         self.logfile  = np.load(os.path.join(rootpath, filename), allow_pickle=True)
         
-        self.ageclasses = ConfigCNN.classes
-        self.conf_nsfw = conf_nsfw
-        self.max_age = [idx for idx, age in enumerate(self.ageclasses) if str(max_age) in age][0]
+        self.conf = {'age': conf_age, 'child': conf_child, 'face': conf_face, 'nsfw': conf_nsfw}
+        self.results  = {}
+
+    def apply_confidence(self, data):
+
+        num_faces, idades, num_criancas = 0, '', 0
+
         
-        self.res_order = ['cont_age', 'cont_faixa', 'age_pred', 'child_pred', 
-                          'prob_nsfw', 'idx_age_pred', 'idx_child_pred', 'all_preds',
-                          'conf_faces']
-        
-        self.results  = None
-        self.classes  = ['Criança', 'NSFW']
-        
+        if len(data['conf_faces']) > 0:
+            
+            mask_faces = np.array(data['conf_faces']) > self.conf['face']
+            num_faces = np.sum(mask_faces)
+            
+            prob_age = [prob for k, prob in enumerate(data['prob_age']) if mask_faces[k] == True]
+            prob_age = [prob for prob in data['prob_age'] if max(prob) > self.conf['age']]
+            if len(prob_age) > 0: 
+                idades   = [ConfigCNN.classes[age] for age in np.argmax(prob_age, axis=-1)]
+            
+            prob_child = [prob for k, prob in enumerate(data['prob_child']) if mask_faces[k] == True] 
+            prob_child = [prob for prob in data['prob_child'] if max(prob) > self.conf['child']]
+            if len(prob_child) > 0:
+                num_criancas = np.sum( [False if child == 1 else True for child in np.argmax(prob_child, axis=-1)] ) 
+            
+        return num_faces, idades, num_criancas    
+    
     def generate_img(self, return_path=True):
         
-        self.results  = {'Arquivo': [], 'NSFW': [], 'Faces': [], 'Confiança Faces': [],  
-                         'Idades': [], 'Criança': [], 'Classe': []}
+        self.results  = {'Arquivo': [], 'NSFW': [], 'Faces': [],  
+                         'Idades': [], 'Crianças': [], 'Classe': []}
         
         results = self.logfile['images']
         
         for result in results:      
             classes = ''
+            
             self.results['Arquivo'].append(result['Arquivo'])
-#             self.results['Tempo de Análise'].append(round(result['Tempo de Análise'], 2))
-
+            
+            # NSFW
             nsfw = np.round(result['data']['prob_nsfw'], 3)
             self.results['NSFW'].append(nsfw)
-            if nsfw >= self.conf_nsfw: classes += '-NSFW'
+            if nsfw >= self.conf['nsfw']: classes += 'Pode conter pornografia. '
             
-            self.results['Faces'].append(len(result['data']['conf_faces']))
-
-            conf_face = result['data']['conf_faces']
-            self.results['Confiança Faces'].append([round(conf, 3) for conf in conf_face])
-
+            # Número de Faces, Idades, Número de Crianças
+            num_faces, idades, num_criancas = self.apply_confidence(result['data']) 
+            self.results['Faces'].append(num_faces)
+            self.results['Idades'].append(idades)
+            self.results['Crianças'].append(num_criancas)
             
-            idx_age = result['data']['prob_age']
-            if idx_age is None or idx_age == '': self.results['Idades'].append(None)
-            else: 
-                idx_age = np.argmax(idx_age, axis=-1)
-                self.results['Idades'].append([self.ageclasses[age] for age in idx_age])
-                if sum(idx_age <= self.max_age) > 0: classes += '-Criança' 
-           
-            idx_child = result['data']['prob_child']
-            if idx_child is None or idx_child == '': self.results['Criança'].append(None)
-            else:
-                idx_child = np.argmax(idx_child, axis=-1)
-                self.results['Criança'].append([False if child == 1 else True for child in idx_child])
-                
-            self.results['Classe'].append(classes)
-
-        report, table_id = self.html_style()
-        
-        if return_path:
-            html_path = os.path.join(self.savepath, self.filename+'.html') 
-            report.to_html(html_path)
-            return html_path, table_id
-        else:
-            return report, table_id
-    
-    def generate_vid_summary(self, return_path=True):
-        
-        self.results  = {'Arquivo': [], 'Probabilidade NSFW': [], 'Número de Faces': [], 'Confiança Faces': [],  
-                         'Faixas de Idade': [], 'Detector Criança': [], 'Classe': [], 'Tempo de Análise': []}
-        
-        results = self.logfile['videos']
-        
-        for result in results:
-            classes = ''
-            self.results['Arquivo'].append(result['Arquivo'])
-            self.results['Tempo de Análise'].append(round(sum(result['Tempo de Análise']['all']), 2))
+            if num_criancas > 0: classes += 'Pode conter menores de idade.'
             
-            prob_nsfw  = self.get_stats(result['frames_video'], self.res_order.index('prob_nsfw'))
-            if prob_nsfw['Max'] >= self.conf_nsfw: classes += '-NSFW'
-            self.results['Probabilidade NSFW'].append(prob_nsfw)
             
-            num_faces = self.get_unique(result['frames_video'], self.res_order.index('cont_age'))
-            self.results['Número de Faces'].append({'Média': round(np.mean(num_faces), 1), 
-                                                    'Desvio': round(np.std(num_faces), 1)}  )
-
-            conf_faces = self.get_stats(result['frames_video'], self.res_order.index('conf_faces'))
-            self.results['Confiança Faces'].append(conf_faces)
-
-            ages = self.get_unique(result['frames_video'], self.res_order.index('idx_age_pred'))
-            self.results['Faixas de Idade'].append([self.ageclasses[age] for age in ages])
-            if len(ages) > 0 and sum(ages <= self.max_age) > 0: classes += '-Criança' 
-            
-            conf_child = self.get_unique(result['frames_video'], self.res_order.index('idx_child_pred'))
-            self.results['Detector Criança'].append([False if child == 1 else True for child in conf_child])
-        
             self.results['Classe'].append(classes)
             
         report, table_id = self.html_style()
@@ -108,39 +71,6 @@ class Report():
             return html_path, table_id
         else:
             return report, table_id
-        
-    def generate_vid_perframe(self, filename):
-        pass ########## TODO
-    
-    def get_unique(self, dic_frames, k):
-
-        age_frames = [res[k] for frame, res in dic_frames.items() if isinstance(frame, int) and res[k] is not None ]
-        if k == self.res_order.index('cont_age'): return np.unique(age_frames)
-        
-        all_ages = []
-        for frame in age_frames:
-            all_ages.extend([np.argmax(age) for age in frame])
-            
-        return np.unique(all_ages)
-    
-    def get_stats(self, dic_frames, k):
-        
-        frames = [res[k] for frame, res in dic_frames.items() if isinstance(frame, int) \
-                                                              and res[k] is not None]
-        if k == self.res_order.index('prob_nsfw'):
-            return {'Min': round(np.min(frames), 2), 'Max': round(np.max(frames), 2),
-                    'Média': round(np.mean(frames), 2), 'Desvio': round(np.std(frames), 2)}
-        
-        else:
-            all_data = []
-            for frame in frames:
-                all_data.extend(data for data in frame)
-
-            if len(all_data) == 0: return []
-            return {'Min': round(np.min(all_data), 2), 'Max': round(np.max(all_data), 2),
-                    'Média': round(np.mean(all_data), 2), 'Desvio': round(np.std(all_data), 2)}
-
-        return []           
         
         
     def html_style(self,):
@@ -152,7 +82,7 @@ class Report():
                                    ("text-align", "center"),
                                    ("font-family", "Helvetica")] ),
         ]
-        
+
         log_df = pd.DataFrame(self.results)
 
         log_style = (log_df.style.apply(self.color_nsfw, axis=1)
@@ -160,12 +90,11 @@ class Report():
                            .set_table_styles(styles))
 
         html = log_style.render(table_id=self.filename)
-        
+
         idx = html.find('table id="')
         table_id = html[idx:].split('\"')[1]
         return html, '#' + table_id
-        
-
+    
     def make_clickable(self, url):
         name = os.path.basename(url)
         return '<a href="{}">{}</a>'.format(url,name)
@@ -177,17 +106,16 @@ class Report():
         attr = ['' for i in range(len(data))]
 
         is_max = pd.Series(data=False, index=data.index)
-        is_max['Classe'] = 'NSFW' in data['Classe'] 
+        is_max['Classe'] = 'pornografia' in data['Classe'] 
 
         if is_max.any():
             porn = True
             attr = ['background-color: {:}'.format(colors[0]) for v in is_max]
 
-        if data['Faces'] > 0:
-            is_max['Classe'] = 'Criança' in data['Classe'] 
-            if is_max.any():
-                color = 2 if porn else 1 
-                attr = ['background-color: {:}'.format(colors[color]) for v in is_max]
+        is_max['Classe'] = 'menores' in data['Classe'] 
+        if is_max.any():
+            color = 2 if porn else 1 
+            attr = ['background-color: {:}'.format(colors[color]) for v in is_max]
 
         return attr
-        
+

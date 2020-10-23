@@ -491,7 +491,7 @@ class VideoProcessor:
             child_conn.send(('imprime','Iniciando análise de vídeos - {}'.format(
                                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")) ))
             for k, target_file in enumerate(sorted(self.file_names)):
-                print('\rProcessando vídeo {}/{}'.format(k+1, len(self.file_names)), end='', flush=True)
+                
                 if not os.path.isfile(target_file): continue
                 
                 retaf = self.analyze_frames(target_file, child_conn, model_age, sess,
@@ -522,6 +522,13 @@ class VideoProcessor:
 
                 child_conn.send(("video_file", (frames_video, target_file, timing_tmp)))
                 del_mtcnn += 1
+                
+                percentage = (k+1) / float(len(self.file_names))
+                child_conn.send(("imprime", 'Progresso {:.0f}%: '.format(percentage*100)  + 
+                                                 '|{:25}| '.format('#'*int(25*percentage))   +  
+                                                 'Tempo decorrido: {:.3f}, '.format(np.sum(timing_tmp['all'])) +
+                                                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")
+                               ))
                 
 
             child_conn.send(("imprime", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")))

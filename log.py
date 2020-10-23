@@ -28,8 +28,7 @@ class Log():
     def set_id(self, id_analysis, empty=True):
         self.id_analysis = id_analysis
         self.result_file = os.path.join(self.log_path, id_analysis)
-        
-        if not empty: self.result_file += '.npz'
+        self.result_file += '.npz'
         
     def send(self, tup):
         
@@ -66,10 +65,9 @@ class Log():
         
             
         elif mode == 'finish':                    
-            #os.remove(self.logfile)
+            os.remove(self.logfile)
             np.savez_compressed(self.result_file, images=self.results['images'] , 
                                                   videos=self.results['videos'])
-            self.result_file += '.npz'
             
         
             

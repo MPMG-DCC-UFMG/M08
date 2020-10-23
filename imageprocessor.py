@@ -143,7 +143,6 @@ class ImageProcessor():
         del detector, model_nsfw, model_age  
         self.detector = None
         tf.keras.backend.clear_session()
-        tf.reset_default_graph()
     
     def load_img(self, filename):
 
