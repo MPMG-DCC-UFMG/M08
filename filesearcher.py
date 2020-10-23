@@ -38,8 +38,9 @@ def get_arquivos_hashes_subdir(root_dir, extensions, min_size=4096, verbose_gf=F
         for arquivo_rel in f:
             arquivo_abs = os.path.join(r, arquivo_rel)
             sz = os.path.getsize(arquivo_abs)
+            arquivo_rel = arquivo_abs[len(root_dir):]
             ind = arquivo_rel.rfind(".")
-
+           
             if ind > 0 and os.path.isfile(arquivo_abs) and sz >= min_size:
                 ext = arquivo_rel[ind:]
                 if ext.lower() in extensions:
@@ -82,6 +83,7 @@ def get_arquivos_hashes_100k_subdir(root_dir, extensions, min_size=5120, verbose
         for arquivo_rel in f:
             arquivo_abs = os.path.join(r, arquivo_rel)
             sz = os.path.getsize(arquivo_abs)
+            arquivo_rel = arquivo_abs[len(root_dir):]
             ind = arquivo_rel.rfind(".")
 
             if ind > 0 and os.path.isfile(arquivo_abs) and sz >= min_size:

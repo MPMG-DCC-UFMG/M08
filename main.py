@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os
+import sys, os, time
 import subprocess
 import warnings
 warnings.filterwarnings('ignore')
@@ -7,7 +7,7 @@ warnings.simplefilter('ignore')
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 sys.path.append('./M08')
 from imageprocessor import ImageProcessor
@@ -28,7 +28,7 @@ main = Blueprint('main', __name__)
 log_obj = Log()
 file_searcher = None
 id_process = ''
-global_path = 'Caminho do Diretório'
+global_path = './batch_download/' #'Caminho do Diretório'
 ####
 
 @main.route('/')
@@ -92,7 +92,12 @@ def SOdialog():
 def IDset():
     global id_process
     global log_obj
-    print('\nIDset\n')
+    ####################
+    global global_path
+    global file_searcher
+    file_searcher = FileSearcher(global_path)
+    file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
+    ####################
     id_process = request.form.get('id-process')
     
     if id_process in log_obj.all_logs: 
@@ -119,9 +124,11 @@ def IMGprocessor():
     if id_process is '': 
         flash('Defina o identificador da análise.'.format(id_process), 'error')
         return redirect(url_for('main.new_analysis')) 
-    
+        
     img_proc = ImageProcessor(file_searcher.files["images"], log_obj)
-    img_proc.process(batch_size=10)
+    start = time.time()
+    img_proc.process(batch_size=1)
+    print('\n\nTempo:', time.time()-start)
     return '', 204
 
 @main.route('/VIDprocessor')
@@ -149,7 +156,7 @@ def IMGVIDprocessor():
         return redirect(url_for('main.new_analysis')) 
     
     img_proc = ImageProcessor(file_searcher.files["images"], log_obj)
-    img_proc.process(batch_size=10)
+    img_proc.process(batch_size=128)
     vid_proc = VideoProcessor(file_searcher.files["videos"])
     vid_proc.process(log_obj)
     return '', 204

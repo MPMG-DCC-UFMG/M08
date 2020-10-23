@@ -24,8 +24,8 @@ class Report():
         
     def generate_img(self, return_path=True):
         
-        self.results  = {'Arquivo': [], 'Probabilidade NSFW': [], 'Número de Faces': [], 'Confiança Faces': [],  
-                         'Faixas de Idade': [], 'Detector Criança': [], 'Classe': []}
+        self.results  = {'Arquivo': [], 'NSFW': [], 'Faces': [], 'Confiança Faces': [],  
+                         'Idades': [], 'Criança': [], 'Classe': []}
         
         results = self.logfile['images']
         
@@ -34,28 +34,28 @@ class Report():
             self.results['Arquivo'].append(result['Arquivo'])
 #             self.results['Tempo de Análise'].append(round(result['Tempo de Análise'], 2))
 
-            nsfw = round(result['data']['prob_nsfw'], 3)
-            self.results['Probabilidade NSFW'].append(nsfw)
+            nsfw = np.round(result['data']['prob_nsfw'], 3)
+            self.results['NSFW'].append(nsfw)
             if nsfw >= self.conf_nsfw: classes += '-NSFW'
             
-            self.results['Número de Faces'].append(len(result['data']['conf_faces']))
+            self.results['Faces'].append(len(result['data']['conf_faces']))
 
             conf_face = result['data']['conf_faces']
             self.results['Confiança Faces'].append([round(conf, 3) for conf in conf_face])
 
             
             idx_age = result['data']['prob_age']
-            if idx_age is None or idx_age == '': self.results['Faixas de Idade'].append(None)
+            if idx_age is None or idx_age == '': self.results['Idades'].append(None)
             else: 
                 idx_age = np.argmax(idx_age, axis=-1)
-                self.results['Faixas de Idade'].append([self.ageclasses[age] for age in idx_age])
+                self.results['Idades'].append([self.ageclasses[age] for age in idx_age])
                 if sum(idx_age <= self.max_age) > 0: classes += '-Criança' 
            
             idx_child = result['data']['prob_child']
-            if idx_child is None or idx_child == '': self.results['Detector Criança'].append(None)
+            if idx_child is None or idx_child == '': self.results['Criança'].append(None)
             else:
                 idx_child = np.argmax(idx_child, axis=-1)
-                self.results['Detector Criança'].append([False if child == 1 else True for child in idx_child])
+                self.results['Criança'].append([False if child == 1 else True for child in idx_child])
                 
             self.results['Classe'].append(classes)
 
@@ -183,7 +183,7 @@ class Report():
             porn = True
             attr = ['background-color: {:}'.format(colors[0]) for v in is_max]
 
-        if data['Número de Faces'] > 0:
+        if data['Faces'] > 0:
             is_max['Classe'] = 'Criança' in data['Classe'] 
             if is_max.any():
                 color = 2 if porn else 1 
