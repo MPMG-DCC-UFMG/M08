@@ -122,6 +122,7 @@ class VideoProcessor:
         tf2 = datetime.datetime.now()
         age_pred = None
         child_pred = None
+        gender_pred = None
         idx_age_pred = None
         idx_child_pred = None
         allpreds = []
@@ -134,6 +135,7 @@ class VideoProcessor:
             timing["age"].append((tf2 - tf1 + t2 - t1).total_seconds())
             age_pred = allpreds[0]
             child_pred = allpreds[1]
+            gender_pred = allpreds[2]
             idx_age_pred = VideoProcessor.conv_pred(allpreds[0])
             idx_child_pred = VideoProcessor.conv_pred(allpreds[1])
             cont_age = len(idx_age_pred[idx_age_pred < len(ConfigCNN.classes)])
@@ -202,8 +204,17 @@ class VideoProcessor:
 
 #         return cont, coords, cont_age, cont_faixa, age_pred, child_pred, prob_nsfw, idx_age_pred, idx_child_pred, \
 #                allpreds, conf_faces, ret_img
-        return cont_age, cont_faixa, age_pred, child_pred, prob_nsfw, idx_age_pred, idx_child_pred, \
-               allpreds, conf_faces
+        
+        result = {'prob_nsfw': '', 'conf_faces': '', 'prob_age': '', 
+                                  'prob_child':'', 'prob_gender': ''}
+        result['prob_nsfw'] = prob_nsfw
+        result['conf_faces'] = conf_faces
+        result['prob_age'] = age_pred
+        result['prob_child'] = child_pred
+        result['prob_gender'] = gender_pred
+        result['coords'] = coords
+        
+        return result
 
     @staticmethod
     def get_labeled_frame(res, frame, frame_number, show_img=False, return_img=False, parameter_confidence=None):
@@ -488,10 +499,9 @@ class VideoProcessor:
             abort = False
             del_mtcnn = 0
             
-            child_conn.send(('imprime','Iniciando análise de vídeos - {}'.format(
+            child_conn.send(('imprime','Iniciando análise de vídeos. {}'.format(
                                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")) ))
             for k, target_file in enumerate(sorted(self.file_names)):
-                
                 if not os.path.isfile(target_file): continue
                 
                 retaf = self.analyze_frames(target_file, child_conn, model_age, sess,

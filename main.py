@@ -13,7 +13,7 @@ sys.path.append('./M08')
 from imageprocessor import ImageProcessor
 from videoprocessor import VideoProcessor
 from filesearcher import FileSearcher
-from report import Report
+from report import ReportImage, ReportVideo
 from log import Log
 
 from flask import Blueprint, render_template, request, jsonify,\
@@ -28,7 +28,7 @@ main = Blueprint('main', __name__)
 log_obj = Log()
 file_searcher = None
 id_process = ''
-global_path = './batch_download/' #'Caminho do Diretório'
+global_path = 'Caminho do Diretório'
 ####
 
 @main.route('/')
@@ -92,12 +92,7 @@ def SOdialog():
 def IDset():
     global id_process
     global log_obj
-    ####################
-    global global_path
-    global file_searcher
-    file_searcher = FileSearcher(global_path)
-    file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
-    ####################
+
     id_process = request.form.get('id-process')
     
     if id_process in log_obj.all_logs: 
@@ -167,12 +162,8 @@ def IMGreport():
 
     with open('./M08/templates/report_header.html', 'r') as f:
         header = f.read()
-    
-    if log_obj.result_file is None:
-        flash('A análise {} não possui arquivo resultado. Ela foi processada?'.format(log_obj.id_analysis))
-        return redirect(url_for('main.new_analysis')) 
-    
-    img_report = Report(log_obj.log_path, log_obj.result_file) 
+        
+    img_report = ReportImage(log_obj.log_path, log_obj.result_file) 
     conteudo, id_tabela = img_report.generate_img(return_path=False)
 
     return render_template_string(header+conteudo+'{% endblock %}', id_report = id_process, 
@@ -188,12 +179,8 @@ def VIDreport():
     with open('./M08/templates/report_header.html', 'r') as f:
         header = f.read()
     
-    if log_obj.result_file is None:
-        flash('A análise {} não possui arquivo resultado. Ela foi processada?'.format(log_obj.id_analysis))
-        return redirect(url_for('main.new_analysis')) 
-    
-    vid_report = Report(log_obj.log_path, log_obj.result_file) 
-    conteudo, id_tabela = vid_report.generate_vid_summary(return_path=False)
+    vid_report = ReportVideo(log_obj.log_path, log_obj.result_file) 
+    conteudo, id_tabela = vid_report.generate_report(return_path=False)
 
     return render_template_string(header+conteudo+'{% endblock %}', id_report = id_process, 
                                   id_tabela=id_tabela, name=current_user.name, path=log_obj.log_path)
@@ -205,11 +192,11 @@ def IMGVIDreport():
     global id_process
     global global_path
     
-    img_report = Report(log_obj.log_path, log_obj.result_file) 
-    html_img = img_report.generate_img(return_path=False)
+    img_report = ReportImage(log_obj.log_path, log_obj.result_file) 
+    html_img = img_report.generate_report(return_path=False)
     
-    vid_report = Report(log_obj.log_path, log_obj.result_file) 
-    html_vid = img_report.generate_vid_summary(return_path=False)
+    vid_report = ReportVideo(log_obj.log_path, log_obj.result_file) 
+    html_vid = img_report.generate_report(return_path=False)
     
     html_paths = [html_img, html_vid]
     return render_template('report.html', html=html_paths, name=current_user.name, 
