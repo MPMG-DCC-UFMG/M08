@@ -2,7 +2,8 @@ import sys, os
 
 
 class ConfigCNN:
-    classes = ['0-2', '4-6', '8-13', '15-20', '25-32', '38-43', '48-53', '60-']
+    classes = ['00-02', '04-06', '08-13', '15-20', '25-32', '38-43', '48-53', '60+']
+    conf = {'nsfw': 0.3, 'face': 0.8, 'age': 0.7, 'child': 0.7}
     faixa_child_adult = ["Crianca", "Adulto"]
     faixa = ['Cr', 'Ad']
     genero = ['M', 'F']

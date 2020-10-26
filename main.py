@@ -14,6 +14,7 @@ from imageprocessor import ImageProcessor
 from videoprocessor import VideoProcessor
 from filesearcher import FileSearcher
 from report import ReportImage, ReportVideo
+from configcnn import ConfigCNN
 from log import Log
 
 from flask import Blueprint, render_template, request, jsonify,\
@@ -29,6 +30,7 @@ log_obj = Log()
 file_searcher = None
 id_process = ''
 global_path = 'Caminho do Diretório'
+conf = ConfigCNN.conf
 ####
 
 @main.route('/')
@@ -41,8 +43,13 @@ def index():
 @main.route('/search_analysis', methods=['POST', 'GET'])
 @login_required
 def search_analysis():
-    return render_template('search_analysis.html', name=current_user.name, id_process=id_process,  
-                                                   buffer=log_obj.buffer)
+    global log_obj
+    global id_process
+    global conf
+    
+    return render_template('search_analysis.html', name=current_user.name, id_process=id_process, buffer=log_obj.buffer,  
+                                                   conf_nsfw=conf['nsfw'], conf_face=conf['face'], 
+                                                   conf_child=conf['child'], conf_age=conf['age'])
 
 @main.route('/set_analysis')
 @login_required
@@ -53,10 +60,9 @@ def set_analysis():
     analysis_path = dialog._open_dialog_analysis()
     if analysis_path is not None and analysis_path != '':
         idx = analysis_path.rfind('.')
-        id_process = os.path.basename(analysis_path)[:idx]
-        
+        id_process = os.path.basename(analysis_path[:idx])
+
         log_obj.set_id(id_process)
-        
         return jsonify(id_process=id_process)
         
     flash('Erro ao carregar arquivo.'.format(id_process), 'error')
@@ -67,10 +73,17 @@ def set_analysis():
 @main.route('/new_analysis', methods=['POST', 'GET'])
 @login_required
 def new_analysis():
+    global global_path
+    global id_process
+    global log_obj
+    global conf
+    
     if request.method == 'POST':
         print(request.form['info3'])
     return render_template('new_analysis.html', name=current_user.name, path=global_path, 
-                                                id_process=id_process, buffer=log_obj.buffer)
+                                                id_process=id_process, buffer=log_obj.buffer,
+                                                conf_nsfw=conf['nsfw'], conf_face=conf['face'], 
+                                                conf_child=conf['child'], conf_age=conf['age'])
 
 @main.route('/SOdialog')
 @login_required
@@ -93,12 +106,13 @@ def IDset():
     global id_process
     global log_obj
 
-    id_process = request.form.get('id-process')
+    id_ = request.form.get('id-process')
     
-    if id_process in log_obj.all_logs: 
-        flash('O identificador {} já existe.'.format(id_process), 'error')
+    if id_ in log_obj.all_logs: 
+        flash('O identificador {} já existe.'.format(id_), 'error')
         return redirect(url_for('main.new_analysis')) 
     
+    id_process = id_
     log_obj.set_id(id_process)
     log_obj.send(('imprime', 'identificador {} definido com sucesso'.format(id_process)))
     return redirect(url_for('main.new_analysis')) 
@@ -154,6 +168,35 @@ def IMGVIDprocessor():
     vid_proc.process(log_obj)
     return '', 204
 
+################# RELATÓRIO #################
+
+@main.route('/settings_search', methods=['POST', 'GET'])
+@login_required
+def settings_search():
+    
+    global conf
+    
+    conf['nsfw']  = float(request.form.get('conf_nsfw'))
+    conf['face']  = float(request.form.get('conf_face'))
+    conf['child'] = float(request.form.get('conf_child'))
+    conf['age']   = float(request.form.get('conf_age'))
+    
+    return redirect(url_for('main.search_analysis')) 
+
+@main.route('/settings_new', methods=['POST', 'GET'])
+@login_required
+def settings_new():
+    
+    global conf
+    
+    conf['nsfw']  = float(request.form.get('conf_nsfw'))
+    conf['face']  = float(request.form.get('conf_face'))
+    conf['child'] = float(request.form.get('conf_child'))
+    conf['age']   = float(request.form.get('conf_age'))
+    
+    return redirect(url_for('main.new_analysis')) 
+    
+
 @main.route('/IMGreport', methods=['POST', 'GET'])
 @login_required
 def IMGreport():
@@ -163,7 +206,10 @@ def IMGreport():
     with open('./M08/templates/report_header.html', 'r') as f:
         header = f.read()
         
-    img_report = ReportImage(log_obj.log_path, log_obj.result_file) 
+    img_report = ReportImage(log_obj.log_path, log_obj.result_file,
+                             conf_age=conf['age'], conf_child=conf['child'], 
+                             conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
+    
     conteudo, id_tabela = img_report.generate_img(return_path=False)
 
     return render_template_string(header+conteudo+'{% endblock %}', id_report = id_process, 
@@ -179,7 +225,10 @@ def VIDreport():
     with open('./M08/templates/report_header.html', 'r') as f:
         header = f.read()
     
-    vid_report = ReportVideo(log_obj.log_path, log_obj.result_file) 
+    vid_report = ReportVideo(log_obj.log_path, log_obj.result_file,
+                             conf_age=conf['age'], conf_child=conf['child'], 
+                             conf_face=conf['face'], conf_nsfw=conf['nsfw'])  
+    
     conteudo, id_tabela = vid_report.generate_report(return_path=False)
 
     return render_template_string(header+conteudo+'{% endblock %}', id_report = id_process, 
@@ -201,3 +250,10 @@ def IMGVIDreport():
     html_paths = [html_img, html_vid]
     return render_template('report.html', html=html_paths, name=current_user.name, 
                            id_report=id_process, path=global_path) 
+
+@main.route('/clear', methods=['POST', 'GET'])
+@login_required
+def clear():
+    global log_obj
+    log_obj.clear()
+    

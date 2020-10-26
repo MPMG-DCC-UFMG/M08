@@ -31,20 +31,19 @@ $(document).ready( function () {
       <div class="container">
           <nav class="level pl-6 pr-6">
               <div class="level-left">
-                  <div class="collumn is-fluid has-text-left">
-                      <h3 class="subtitle is-3">Relatório</h3>
-                      <h5 class="subtitle is-5">Responsável: {{name}}</h5>
-                      <h5 class="subtitle is-5">Nome (ID) da Análise: {{id_report}}</h5>
-                      <h5 class="subtitle is-5">Diretório raiz: {{path}}</h5>
-		      <p is-size-6 has-text-left>Atenção: Os resultados a seguir são fruto de um modelo probabilístico, com objetivo de auxílio em triagem e portanto pode haver falsos positivos e/ou falsos negativos. Favor verificá-los visualmente.</p>
-                  </div>
-              </div>
+				    <div class="collumn is-fluid has-text-left is-half">
+					  <h3 class="subtitle is-3">Relatório</h3>
+					  <h5 class="subtitle is-5">Responsável: {{name}}</h5>
+					  <h5 class="subtitle is-5">Nome (ID) da Análise: {{id_report}}</h5>
+					  <h5 class="subtitle is-5">Diretório raiz: {{path}}</h5>
+				    </div>
+			  </div>
   
               <div class="level-right">
                   <div class="collumn is-fluid ">
                       <script>
                           $(function(){
-                              $("#input-folder").click(function(event){
+                              $("#analysis_down").click(function(event){
                                   $.getJSON('/SOdialog', { }, function(data){
   
                                   });
@@ -52,12 +51,25 @@ $(document).ready( function () {
                               });
                           });
                       </script>
+					  <a id="analysis_down" class="button has-background-info-dark has-text-white is-fullwidth">Baixar Relatório</a>
+					  
+					  <script>
+                          $(function(){
+                              $("#analysis_clear").click(function(event){
+                                  $.getJSON('/clear', { }, function(data){
   
-                      <a id="analysis_down" class="button has-background-info-dark has-text-white is-fullwidth">Baixar Relatório</a>
+                                  });
+                                  return false;
+                              });
+                          });
+                      </script>
+					  <a id="analysis_clear" class="button has-background-danger-dark has-text-white is-fullwidth mt-5">Limpar Dados</a>
                   </div>
               </div>
           </nav>
+		  <div class="collumn is-fluid has-text-left pl-6 pr-6">
+			<p class="has-text-danger-dark is-size-5">Atenção: <p class="is-size-5"> Os resultados a seguir são fruto de um modelo probabilístico, com objetivo de auxílio em triagem e portanto pode haver falsos positivos e/ou falsos negativos. Favor verificá-los visualmente.</p></p>
+		  </div>
       </div>
   </section>
-  
   

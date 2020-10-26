@@ -119,79 +119,78 @@
                         <button class="button has-background-info-dark has-text-white is-fullwidth modal-button mb-5" id="modalopen" data-target="modal" aria-haspopup="true">Configurações</button>
 
                         <div id="modal" class="modal">
-                            <div class="modal-background" id="modalback"></div>
-                            <div class="modal-card">
-                                <header class="modal-card-head has-background-white">
-                                    <p class="modal-card-title">Configurações</p>
-                                </header>
+							<div class="modal-background" id="modalback"></div>
+							<div class="modal-card">
+								<header class="modal-card-head has-background-white">
+									<p class="modal-card-title">Configurações</p>
+								</header>
 
-                                <section class="modal-card-body has-background-link-light">
-                                    <div class="container is-fullwidth">
-                                        <nav class="level">
-                                            <div class="level-left">
-                                                <div class="collumns">
-                                                    <div class="collumn pl-3 pr-3 pb-6">
-                                                        <h5 class="subtitle is-5 has-text-left pt-4 pb-2">Limite de idade:</h5>
-                                                        <h5 class="subtitle is-5 has-text-left pb-2 pr-4">Confiança na detecção de pornografia:</h5>
-                                                        <h5 class="subtitle is-5 has-text-left">Confiança na detecção de face:</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
+								<section class="modal-card-body has-background-link-light">
+									<div class="container is-fullwidth">
+										<nav class="level">
+											<div class="level-left">
+												<div class="collumns">
+													<div class="collumn pl-3 pr-3 pb-6">
+														<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Limiar de pornografia:</h5>
+														<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Limiar da detecção de face:</h5>
+														<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Limiar da detecção de crianças:</h5>
+														<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Limiar da estimativa de idade:</h5>
+													</div>
+												</div>
+											</div>
 
-                                            <div class="level-right">
-                                                <div class="collumns  ">
-                                                    <div class="column mt-6 pt-6 pl-3 pr-3">
-							                            <form action="{{ url_for('main.new_analysis') }}" method="post">
-                                                            <div class="control">
-                                                                <div class="select is-fullwidth mb-2">
-                                                                    <select>
-                                                                        <option>Selecione</option>
-                                                                        <option>Idades 1</option>
-                                                                        <option>Idades 2</option>
-                                                                        <option>Idades 3</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
+											<div class="level-right">
+												<div class="collumns  ">
+													<div class="column mt-6 pt-6 pl-3 pr-3">
+														<form action="/settings_new" method="post">
+															
+															<div class="control mb-2">
+																<input class="input" type="text" value={{ conf_nsfw }} name="conf_nsfw" />
+															</div>
 
-                                                            <div class="control mb-2">
-                                                                <input class="input mt-2" type="text" placeholder="Entre 0 e 1" name="conf_nsfw" />
-                                                            </div>
+															<div class="control mb-3  ">
+																<input class="input mt-2" type="text" value={{ conf_face }} name="conf_face"/>
+															</div>
+															
+															<div class="control mb-3  ">
+																<input class="input mt-2" type="text" value={{ conf_child }} name="conf_child"/>
+															</div>
+															
+															<div class="control mb-3  ">
+																<input class="input mt-2" type="text" value={{ conf_age }} name="conf_age"/>
+															</div>
 
-                                                            <div class="control mb-3  ">
-                                                                <input class="input mt-2" type="text" placeholder="Entre 0 e 1" name="conf_face"/>
-                                                            </div>
+															<div class="control">
+																<button class="button has-background-info-dark has-text-white is-fullwidth mt-6" type="submit" value="Submit">Definir</button>
+															</div>
+														</form>
+													</div>
+												</div>
+											</div>
+										</nav>
+									</div>
+								</section>
+							</div>
 
-                                                            <div class="control">
-                                                                <button class="button has-background-info-dark has-text-white is-fullwidth mt-6" type="submit" value="Submit">Definir</button>
-                                                            </div>
-							                            </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </nav>
-                                    </div>
-                                </section>
-                            </div>
+							<button class="modal-close is-large" id="modalclose" aria-label="close"></button>
 
-                            <button class="modal-close is-large" id="modalclose" aria-label="close"></button>
+							<script>
+								$(document).ready(function(){
+									$("#modalopen").click(function(){
+										$("#modal").addClass("is-active");
+									});
 
-                            <script>
-                                $(document).ready(function(){
-                                    $("#modalopen").click(function(){
-                                        $("#modal").addClass("is-active");
-                                    });
+									$("#modalclose").click(function(){
+										$("#modal").removeClass("is-active");
+									});
 
-                                    $("#modalclose").click(function(){
-                                        $("#modal").removeClass("is-active");
-                                    });
+									$("#modalback").click(function(){
+										$("#modal").removeClass("is-active");
+									});
 
-                                    $("#modalback").click(function(){
-                                        $("#modal").removeClass("is-active");
-                                    });
-
-                                });
-                            </script>
-                        </div>
+								});
+							</script>
+						</div>
 						
 						<div class="buttons">
                             <a href="{{ url_for('main.IMGreport') }}" target="_blank" class="button is-info is-fullwidth">Gerar Relatório de Imagens</a>

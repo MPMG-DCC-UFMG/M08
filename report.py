@@ -2,6 +2,7 @@ from configcnn import ConfigCNN
 import pandas as pd
 import numpy as np
 import os, re, cv2
+from time import gmtime, strftime
 
 class ReportImage():
     
@@ -9,7 +10,6 @@ class ReportImage():
         self.savepath = rootpath
         self.filename = filename[:-4]
         self.logfile = None
-        
         if os.path.isfile(os.path.join(rootpath, filename)):
             self.logfile  = np.load(os.path.join(rootpath, filename), allow_pickle=True)
         
@@ -29,7 +29,7 @@ class ReportImage():
             prob_age = data['prob_age'][mask_faces]
             prob_age = prob_age[np.max(prob_age, axis=-1) > self.conf['age']]
             if len(prob_age) > 0: 
-                idades   = [ConfigCNN.classes[age] for age in np.argmax(prob_age, axis=-1)]
+                idades   = [ConfigCNN.classes[age] for age in sorted(np.argmax(prob_age, axis=-1)) ]
             idades += ['ND']* (num_faces-len(prob_age))
             
             prob_child = data['prob_child'][mask_faces]
@@ -54,7 +54,7 @@ class ReportImage():
 
                 # NSFW
                 nsfw = np.round(result['data']['prob_nsfw'], 3)
-                self.results['NSFW'].append(nsfw)
+                self.results['NSFW'].append('{:.3f}'.format(nsfw))
                 if nsfw >= self.conf['nsfw']: classes += 'Pode conter pornografia. '
 
                 # Número de Faces, Idades, Número de Crianças
@@ -67,7 +67,7 @@ class ReportImage():
 
 
                 self.results['Classe'].append(classes)
-            
+
         report, table_id = self.html_style()
         
         if return_path:
@@ -89,7 +89,6 @@ class ReportImage():
         ]
 
         log_df = pd.DataFrame(self.results)
-
         log_style = (log_df.style.apply(self.color_nsfw, axis=1)
                            .format({'Arquivo': self.make_clickable})
                            .set_table_styles(styles))
@@ -162,7 +161,7 @@ class ReportVideo():
     
     def generate_report(self, return_path=True):
         
-        self.results  = {'Arquivo': [], 'Frame': [], 'Thumbnail': [], 'Classe': []}
+        self.results  = {'Arquivo': [], 'Timestamp': [], 'Thumbnail': [], 'Classe': []}
         
         if self.logfile is not None: 
             videos = self.logfile['videos']
@@ -198,14 +197,14 @@ class ReportVideo():
                     if len(retimages) >= self.max_frames: break
                     idx = child_porn.loc[row]['frame']
                     self.results['Arquivo'].append(video['Arquivo'])
-                    retimages.append(idx)   # / float(video['frames_video']["fps"]
+                    retimages.append(idx)   
                     self.results['Classe'].append('Pode conter pornografia. Pode conter menores de idade.')
 
                 for row in porn.index:
                     if len(retimages) >= self.max_frames: break
                     idx = porn.loc[row]['frame']
                     self.results['Arquivo'].append(video['Arquivo'])
-                    retimages.append(idx)   # / float(video['frames_video']["fps"]
+                    retimages.append(idx)   
                     self.results['Classe'].append('Pode conter pornografia.')
 
 
@@ -214,7 +213,7 @@ class ReportVideo():
                     if len(retimages) >= self.max_frames: break
                     idx = child.loc[row]['frame']
                     self.results['Arquivo'].append(video['Arquivo'])
-                    retimages.append(idx)   # / float(video['frames_video']["fps"]
+                    retimages.append(idx)   
                     self.results['Classe'].append('Pode conter menores de idade.')
 
                 results.sort_values('Porn', ascending=False)
@@ -222,12 +221,14 @@ class ReportVideo():
                     if len(retimages) >= self.max_frames: break
                     idx = results.loc[row]['frame']
                     self.results['Arquivo'].append(video['Arquivo'])
-                    retimages.append(idx)   # / float(video['frames_video']["fps"]
+                    retimages.append(idx)  
                     self.results['Classe'].append([''])
     
                 self.results['Thumbnail'].extend(self.get_labeled_frames(video['Arquivo'], 
                                                                          retimages, frames))
-                self.results['Frame'].extend(retimages)
+                
+                retimages = [ strftime("%H:%M:%S", gmtime(fr/float(video['frames_video']["fps"]))) for fr in retimages] 
+                self.results['Timestamp'].extend(retimages)
             
         report, table_id = self.html_style()
         

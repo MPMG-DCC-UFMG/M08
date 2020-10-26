@@ -5,7 +5,6 @@ import time
 import hashlib
 import string
 import math
-from shutil import rmtree
 
 def imprime_msg(signal_msg, task_id, txt):
     if signal_msg is not None:
@@ -159,6 +158,8 @@ class FileSearcher:
             file_name = file_names[0]
             file_hash = self.img_itens_list[i][0]
             file_id = "{:07d}".format(i)
+            
+            file_name = file_name.strip('\\').strip('/') 
             self.files["images"][os.path.join(self.source_path,file_name)] = {"names": file_names, "hash": file_hash, "id": file_id}
         last_i = i
         signal_msg.send(('imprime',  
@@ -183,6 +184,8 @@ class FileSearcher:
             file_name = file_names[0]
             file_hash = self.vid_itens_list[i][0]
             file_id = "{:07d}".format(i + last_i)
+            
+            file_name = file_name.strip('\\').strip('/') 
             self.files["videos"][os.path.join(self.source_path,file_name)] = {"names": file_names, "hash": file_hash, "id": file_id}
 
         signal_msg.send(('imprime', 

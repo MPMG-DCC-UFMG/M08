@@ -64,9 +64,10 @@
 								<div class="level-left">
 									<div class="collumns">
 										<div class="collumn pl-3 pr-3 pb-6">
-											<h5 class="subtitle is-5 has-text-left pt-4 pb-2">Limite de idade:</h5>
-											<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Confiança na detecção de pornografia:</h5>
-											<h5 class="subtitle is-5 has-text-left">Confiança na detecção de face:</h5>
+											<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Limiar de pornografia:</h5>
+											<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Limiar da detecção de face:</h5>
+											<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Limiar da detecção de crianças:</h5>
+											<h5 class="subtitle is-5 has-text-left pb-2 pr-4">Limiar da estimativa de idade:</h5>
 										</div>
 									</div>
 								</div>
@@ -74,24 +75,22 @@
 								<div class="level-right">
 									<div class="collumns  ">
 										<div class="column mt-6 pt-6 pl-3 pr-3">
-											<form action="{{ url_for('main.search_analysis') }}" method="post">
-												<div class="control">
-													<div class="select is-fullwidth mb-2">
-														<select>
-															<option>Selecione</option>
-															<option>Idades 1</option>
-															<option>Idades 2</option>
-															<option>Idades 3</option>
-														</select>
-													</div>
-												</div>
-
+											<form action="/settings_search" method="post">
+												
 												<div class="control mb-2">
-													<input class="input mt-2" type="text" placeholder="Entre 0 e 1" name="conf_nsfw" />
+													<input class="input" type="text" value={{ conf_nsfw }} name="conf_nsfw" />
 												</div>
 
 												<div class="control mb-3  ">
-													<input class="input mt-2" type="text" placeholder="Entre 0 e 1" name="conf_face"/>
+													<input class="input mt-2" type="text" value={{ conf_face }} name="conf_face"/>
+												</div>
+												
+												<div class="control mb-3  ">
+													<input class="input mt-2" type="text" value={{ conf_child }} name="conf_child"/>
+												</div>
+												
+												<div class="control mb-3  ">
+													<input class="input mt-2" type="text" value={{ conf_age }} name="conf_age"/>
 												</div>
 
 												<div class="control">
@@ -131,11 +130,11 @@
 			</div>
 
 			<div class="buttons is-centered">
-				<a href="{{ url_for('main.IMGreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Vídeos</a>
+				<a href="{{ url_for('main.VIDreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Vídeos</a>
 			</div>
 
 			<div class="buttons is-centered">
-				<a href="{{ url_for('main.IMGreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Todos</a>
+				<a href="{{ url_for('main.IMGVIDreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Todos</a>
 			</div>
 	
 		

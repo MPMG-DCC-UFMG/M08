@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os, random
+from shutil import rmtree
     
 
 class Log():
@@ -66,8 +67,16 @@ class Log():
             
         elif mode == 'finish':                    
             os.remove(self.logfile)
-            np.savez_compressed(self.result_file, images=self.results['images'] , 
-                                                  videos=self.results['videos'])
+            if len(self.results['images']) > 0 or len(self.results['videos']) > 0:
+                np.savez_compressed(self.result_file, images=self.results['images'] , 
+                                                      videos=self.results['videos'])
+                
+    def clear(self, tup):
+        
+        save_dir = os.path.join(self.log_path, self.result_file)
+        if os.path.isdir(save_dir):
+            rmtree(save_dir)
+            
             
         
             
