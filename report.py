@@ -6,13 +6,14 @@ from time import gmtime, strftime
 
 class ReportImage():
     
-    def __init__(self, rootpath, filename, conf_age=0.7, conf_child=0.7, conf_face=0.8, conf_nsfw=0.3):
-        self.savepath = rootpath
+    def __init__(self, logpath, filename, conf_age=0.7, conf_child=0.7, conf_face=0.8, conf_nsfw=0.3):
+        self.savepath = logpath
         self.filename = filename[:-4]
         self.logfile = None
-        if os.path.isfile(os.path.join(rootpath, filename)):
-            self.logfile  = np.load(os.path.join(rootpath, filename), allow_pickle=True)
+        if os.path.isfile(os.path.join(logpath, filename)):
+            self.logfile  = np.load(os.path.join(logpath, filename), allow_pickle=True)
         
+        self.rootpath = self.logfile['rootpath']
         self.conf = {'age': conf_age, 'child': conf_child, 'face': conf_face, 'nsfw': conf_nsfw}
         self.results  = {}
 
@@ -39,7 +40,7 @@ class ReportImage():
         
         return num_faces, idades, num_criancas    
     
-    def generate_img(self, return_path=True):
+    def generate_report(self, return_path=True):
         
         self.results  = {'Arquivo': [], 'NSFW': [], 'Faces': [],  
                          'Idades': [], 'Crianças': [], 'Classe': []}
@@ -125,14 +126,15 @@ class ReportImage():
     
 class ReportVideo():
     
-    def __init__(self, rootpath, filename, conf_age=0.8, conf_child=0.6, conf_face=0.8, conf_nsfw=0.3):
-        self.savepath = rootpath
+    def __init__(self, logpath, filename, conf_age=0.8, conf_child=0.6, conf_face=0.8, conf_nsfw=0.3):
+        self.savepath = logpath
         self.filename = filename[:-4]
         self.logfile = None
         
-        if os.path.isfile(os.path.join(rootpath, filename)):
-            self.logfile  = np.load(os.path.join(rootpath, filename), allow_pickle=True)
+        if os.path.isfile(os.path.join(logpath, filename)):
+            self.logfile  = np.load(os.path.join(logpath, filename), allow_pickle=True)
         
+        self.rootpath = self.logfile['rootpath']
         self.conf = {'age': conf_age, 'child': conf_child, 'face': conf_face, 'nsfw': conf_nsfw}
         self.max_frames = 8
         self.results  = {}

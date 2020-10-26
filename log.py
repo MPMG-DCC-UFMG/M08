@@ -23,8 +23,12 @@ class Log():
         self.result_file = None
         
         self.logfile  = os.path.join(log_path, 'log_temp{}.txt'.format( int(random.random()*1e5) ))
-        self.results  = {'images': [], 'videos': []}
+        self.results  = {'images': [], 'videos': [], 'rootpath': ''}
         self.buffer  = ''
+    
+    
+    def set_rootpath(self, rootpath):
+        self.results['rootpath'] = rootpath
     
     def set_id(self, id_analysis, empty=True):
         self.id_analysis = id_analysis
@@ -69,7 +73,8 @@ class Log():
             os.remove(self.logfile)
             if len(self.results['images']) > 0 or len(self.results['videos']) > 0:
                 np.savez_compressed(self.result_file, images=self.results['images'] , 
-                                                      videos=self.results['videos'])
+                                                      videos=self.results['videos'],
+                                                      rootpath=self.results['rootpath'])
                 
     def clear(self, tup):
         

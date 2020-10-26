@@ -26,7 +26,16 @@ $(document).ready( function () {
         });
 } );
 </script>
-</script>
+<script type="text/javascript">
+    var myVariable2 = {{ id_tabela_2 | tojson }};
+    $(document).ready( function () {
+        $(myVariable2).dataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
+            },
+            });
+    } );
+    </script>
 <h1 class="title">
     <section class="section has-background-link-light">
       <div class="container">
@@ -73,4 +82,5 @@ $(document).ready( function () {
 		  </div>
       </div>
   </section>
+  
   

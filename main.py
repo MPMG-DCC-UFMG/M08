@@ -97,7 +97,9 @@ def SOdialog():
         global_path = local_path
     file_searcher = FileSearcher(local_path)
     file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
-
+    
+    log_obj.set_rootpath(local_path)
+    
     return jsonify(path=global_path)
 
 @main.route('/idprocess', methods=['GET','POST'])
@@ -210,10 +212,10 @@ def IMGreport():
                              conf_age=conf['age'], conf_child=conf['child'], 
                              conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
     
-    conteudo, id_tabela = img_report.generate_img(return_path=False)
+    conteudo, id_tabela = img_report.generate_report(return_path=False)
 
     return render_template_string(header+conteudo+'{% endblock %}', id_report = id_process, 
-                                  id_tabela=id_tabela, name=current_user.name, path=log_obj.log_path)
+                                  id_tabela=id_tabela, name=current_user.name, path=img_report.rootpath)
 
     
 @main.route('/VIDreport', methods=['POST', 'GET'])
@@ -232,7 +234,7 @@ def VIDreport():
     conteudo, id_tabela = vid_report.generate_report(return_path=False)
 
     return render_template_string(header+conteudo+'{% endblock %}', id_report = id_process, 
-                                  id_tabela=id_tabela, name=current_user.name, path=log_obj.log_path)
+                                  id_tabela=id_tabela, name=current_user.name, path=vid_report.rootpath)
 
 @main.route('/IMGVIDreport', methods=['POST', 'GET'])
 @login_required
@@ -240,16 +242,24 @@ def IMGVIDreport():
     global log_obj
     global id_process
     global global_path
-    
+    with open('./M08/templates/report_vid_img_header.html', 'r') as f:
+        header = f.read()
     img_report = ReportImage(log_obj.log_path, log_obj.result_file) 
-    html_img = img_report.generate_report(return_path=False)
+    html_img, id_tabela = img_report.generate_report(return_path=False)
+    html_img = '<section class=\"section has-background-white\">' + \
+                   '<h3 class=\"subtitle is-3 has-text-centered has-background-link-light pb-2\">Imagens</h3>' + html_img + \
+                '</section>'
     
     vid_report = ReportVideo(log_obj.log_path, log_obj.result_file) 
-    html_vid = img_report.generate_report(return_path=False)
+    html_vid, id_tabela_2 = vid_report.generate_report(return_path=False)
+    html_vid = '<section class=\"section has-background-white\">' + \
+                   '<h3 class=\"subtitle is-3 has-text-centered has-background-link-light pb-2\">Vídeos</h3>' + html_vid + \
+                '</section>'
     
-    html_paths = [html_img, html_vid]
-    return render_template('report.html', html=html_paths, name=current_user.name, 
-                           id_report=id_process, path=global_path) 
+    
+    return render_template_string(header+html_img+html_vid+'{% endblock %}', id_report = id_process, 
+                                  id_tabela=id_tabela, id_tabela_2=id_tabela_2, name=current_user.name, 
+                                  path=img_report.rootpath)
 
 @main.route('/clear', methods=['POST', 'GET'])
 @login_required
