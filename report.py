@@ -257,6 +257,9 @@ class ReportVideo():
             data = all_data[pos_frame]
             cap.set(cv2.CAP_PROP_POS_FRAMES, pos_frame)
             ret, frame = cap.read()
+            if not ret:
+                retframes.append('')
+                continue
             
             shp = frame.shape
             font = cv2.FONT_HERSHEY_COMPLEX
@@ -304,13 +307,13 @@ class ReportVideo():
                     cv2.putText(imgwork, label_child_adult, (max(x, 10), max(y, 20)), + font, szfont, cor,
                                 bold, cv2.LINE_AA)
                     
-                    save_dir = os.path.join(self.savepath, self.filename)
-                    if not os.path.isdir(save_dir):
-                        os.mkdir(save_dir)
-                    save_file = os.path.join(save_dir, os.path.basename(filename) + '_' + str(pos_frame) + '.jpg') 
-                    
-                    cv2.imwrite(save_file, imgwork)
-                    retframes.append(save_file)
+                save_dir = os.path.join(self.savepath, self.filename)
+                if not os.path.isdir(save_dir):
+                    os.mkdir(save_dir)
+                save_file = os.path.join(save_dir, os.path.basename(filename) + '_' + str(pos_frame) + '.jpg') 
+
+                cv2.imwrite(save_file, imgwork)
+                retframes.append(save_file)
                     
         return retframes
         
@@ -324,7 +327,7 @@ class ReportVideo():
                                    ("text-align", "center"),
                                    ("font-family", "Helvetica")] ),
         ]
-
+        
         log_df = pd.DataFrame(self.results)
 
         log_style = (log_df.style.apply(self.color_nsfw, axis=1)

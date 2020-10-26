@@ -76,9 +76,9 @@ class Log():
                                                       videos=self.results['videos'],
                                                       rootpath=self.results['rootpath'])
                 
-    def clear(self, tup):
+    def clear(self,):
         
-        save_dir = os.path.join(self.log_path, self.result_file)
+        save_dir = os.path.join(self.log_path, self.id_analysis)
         if os.path.isdir(save_dir):
             rmtree(save_dir)
             

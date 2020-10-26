@@ -293,4 +293,5 @@ def analysis_down():
 def clear():
     global log_obj
     log_obj.clear()
+    return '', 204
     
