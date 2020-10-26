@@ -8,10 +8,11 @@ class ReportImage():
     
     def __init__(self, logpath, filename, conf_age=0.7, conf_child=0.7, conf_face=0.8, conf_nsfw=0.3):
         self.savepath = logpath
-        self.filename = filename[:-4]
+        self.filename = filename
+
         self.logfile = None
-        if os.path.isfile(os.path.join(logpath, filename)):
-            self.logfile  = np.load(os.path.join(logpath, filename), allow_pickle=True)
+        if os.path.isfile(os.path.join(logpath, filename+'.npz')):
+            self.logfile  = np.load(os.path.join(logpath, filename+'.npz'), allow_pickle=True)
         
         self.rootpath = self.logfile['rootpath']
         self.conf = {'age': conf_age, 'child': conf_child, 'face': conf_face, 'nsfw': conf_nsfw}
@@ -79,7 +80,7 @@ class ReportImage():
             return report, table_id
         
         
-    def html_style(self,):
+    def html_style(self, excel_path=None):
         styles = [
         dict(selector="th", props=[("font-size", "100%"),
                                    ("text-align", "center"),
@@ -94,8 +95,11 @@ class ReportImage():
                            .format({'Arquivo': self.make_clickable})
                            .set_table_styles(styles))
 
-        html = log_style.render(table_id=self.filename)
+        if excel_path is not None:
+            log_style.to_excel(os.path.join(excel_path, self.filename+'_imagens.xlsx') )
+            return
 
+        html = log_style.render(table_id=self.filename)
         idx = html.find('table id="')
         table_id = html[idx:].split('\"')[1]
         return html, '#' + table_id
@@ -123,16 +127,18 @@ class ReportImage():
             attr = ['background-color: {:}'.format(colors[color]) for v in is_max]
 
         return attr
+        
+        
     
 class ReportVideo():
     
     def __init__(self, logpath, filename, conf_age=0.8, conf_child=0.6, conf_face=0.8, conf_nsfw=0.3):
         self.savepath = logpath
-        self.filename = filename[:-4]
+        self.filename = filename
+
         self.logfile = None
-        
-        if os.path.isfile(os.path.join(logpath, filename)):
-            self.logfile  = np.load(os.path.join(logpath, filename), allow_pickle=True)
+        if os.path.isfile(os.path.join(logpath, filename+'.npz')):
+            self.logfile  = np.load(os.path.join(logpath, filename+'.npz'), allow_pickle=True)
         
         self.rootpath = self.logfile['rootpath']
         self.conf = {'age': conf_age, 'child': conf_child, 'face': conf_face, 'nsfw': conf_nsfw}
@@ -309,7 +315,7 @@ class ReportVideo():
         return retframes
         
         
-    def html_style(self,):
+    def html_style(self,excel_path=None):
         styles = [
         dict(selector="th", props=[("font-size", "100%"),
                                    ("text-align", "center"),
@@ -327,6 +333,10 @@ class ReportVideo():
                            .format({'Arquivo': self.make_clickable})
                            .set_table_styles(styles))
 
+        if excel_path is not None:
+            log_style.to_excel(os.path.join(excel_path, self.filename+'_videos.xlsx') )
+            return
+        
         html = log_style.render(table_id=self.filename)
 
         idx = html.find('table id="')

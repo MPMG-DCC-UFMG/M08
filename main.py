@@ -31,6 +31,7 @@ file_searcher = None
 id_process = ''
 global_path = 'Caminho do Diretório'
 conf = ConfigCNN.conf
+img_report, vid_report = None, None
 ####
 
 @main.route('/')
@@ -38,7 +39,9 @@ def index():
     return render_template('index.html')
 
 
-################# BUSCAR ANALISE #################
+####################################################
+#                  BUSCAR ANALISE                  #
+####################################################
 
 @main.route('/search_analysis', methods=['POST', 'GET'])
 @login_required
@@ -68,7 +71,9 @@ def set_analysis():
     flash('Erro ao carregar arquivo.'.format(id_process), 'error')
     return redirect(url_for('main.new_analysis')) 
 
-################# NOVA ANALISE #################
+####################################################
+#                  NOVA ANALISE                    #
+####################################################
 
 @main.route('/new_analysis', methods=['POST', 'GET'])
 @login_required
@@ -170,7 +175,9 @@ def IMGVIDprocessor():
     vid_proc.process(log_obj)
     return '', 204
 
-################# RELATÓRIO #################
+####################################################
+#                      RELATÓRIO                   #
+####################################################
 
 @main.route('/settings_search', methods=['POST', 'GET'])
 @login_required
@@ -204,11 +211,12 @@ def settings_new():
 def IMGreport():
     global log_obj
     global id_process
+    global img_report
 
     with open('./M08/templates/report_header.html', 'r') as f:
         header = f.read()
         
-    img_report = ReportImage(log_obj.log_path, log_obj.result_file,
+    img_report = ReportImage(log_obj.log_path, id_process,
                              conf_age=conf['age'], conf_child=conf['child'], 
                              conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
     
@@ -223,11 +231,12 @@ def IMGreport():
 def VIDreport():
     global log_obj
     global id_process
-
+    global vid_report
+    
     with open('./M08/templates/report_header.html', 'r') as f:
         header = f.read()
     
-    vid_report = ReportVideo(log_obj.log_path, log_obj.result_file,
+    vid_report = ReportVideo(log_obj.log_path, id_process,
                              conf_age=conf['age'], conf_child=conf['child'], 
                              conf_face=conf['face'], conf_nsfw=conf['nsfw'])  
     
@@ -241,16 +250,18 @@ def VIDreport():
 def IMGVIDreport():
     global log_obj
     global id_process
-    global global_path
+    global img_report
+    global vid_report
+    
     with open('./M08/templates/report_vid_img_header.html', 'r') as f:
         header = f.read()
-    img_report = ReportImage(log_obj.log_path, log_obj.result_file) 
+    img_report = ReportImage(log_obj.log_path, id_process) 
     html_img, id_tabela = img_report.generate_report(return_path=False)
     html_img = '<section class=\"section has-background-white\">' + \
                    '<h3 class=\"subtitle is-3 has-text-centered has-background-link-light pb-2\">Imagens</h3>' + html_img + \
                 '</section>'
     
-    vid_report = ReportVideo(log_obj.log_path, log_obj.result_file) 
+    vid_report = ReportVideo(log_obj.log_path, id_process) 
     html_vid, id_tabela_2 = vid_report.generate_report(return_path=False)
     html_vid = '<section class=\"section has-background-white\">' + \
                    '<h3 class=\"subtitle is-3 has-text-centered has-background-link-light pb-2\">Vídeos</h3>' + html_vid + \
@@ -260,6 +271,22 @@ def IMGVIDreport():
     return render_template_string(header+html_img+html_vid+'{% endblock %}', id_report = id_process, 
                                   id_tabela=id_tabela, id_tabela_2=id_tabela_2, name=current_user.name, 
                                   path=img_report.rootpath)
+@main.route('/analysis_down', methods=['POST', 'GET'])
+@login_required
+def analysis_down():
+    global img_report
+    global vid_report
+    
+    savepath = None
+    
+    savepath = dialog._open_dialog_file()
+    if savepath is not None and savepath != '':
+        if img_report is not None:
+            img_report.html_style(savepath)
+        if vid_report is not None:
+            vid_report.html_style(savepath)
+            
+    return '', 204
 
 @main.route('/clear', methods=['POST', 'GET'])
 @login_required
