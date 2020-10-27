@@ -213,9 +213,9 @@ def IMGreport():
     global id_process
     global img_report
 
-    with open('./M08/templates/report_header.html', 'r') as f:
+    with open('./M08/templates/report_header.html', 'r', encoding='utf-8') as f:
         header = f.read()
-        
+    print(header)
     img_report = ReportImage(log_obj.log_path, id_process,
                              conf_age=conf['age'], conf_child=conf['child'], 
                              conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
@@ -233,7 +233,7 @@ def VIDreport():
     global id_process
     global vid_report
     
-    with open('./M08/templates/report_header.html', 'r') as f:
+    with open('./M08/templates/report_header.html', 'r', encoding='utf-8') as f:
         header = f.read()
     
     vid_report = ReportVideo(log_obj.log_path, id_process,
@@ -253,8 +253,9 @@ def IMGVIDreport():
     global img_report
     global vid_report
     
-    with open('./M08/templates/report_vid_img_header.html', 'r') as f:
+    with open('./M08/templates/report_vid_img_header.html', 'r', encoding='utf-8') as f:
         header = f.read()
+    
     img_report = ReportImage(log_obj.log_path, id_process) 
     html_img, id_tabela = img_report.generate_report(return_path=False)
     html_img = '<section class=\"section has-background-white\">' + \
