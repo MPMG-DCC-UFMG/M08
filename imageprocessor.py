@@ -1,7 +1,7 @@
 import sys, os, cv2
 import datetime, time
 import numpy as np
-import random
+import random, gc
 
 import tensorflow as tf
 from tensorflow.data import Dataset
@@ -143,6 +143,7 @@ class ImageProcessor():
         del detector, model_nsfw, model_age  
         self.detector = None
         tf.keras.backend.clear_session()
+        gc.collect()
     
     def load_img(self, filename):
 

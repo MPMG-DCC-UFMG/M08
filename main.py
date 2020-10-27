@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import sys, os, time
+import sys, os, time, gc
+from pathlib import Path
 import subprocess
 import warnings
 warnings.filterwarnings('ignore')
@@ -215,7 +216,7 @@ def IMGreport():
 
     with open('./M08/templates/report_header.html', 'r', encoding='utf-8') as f:
         header = f.read()
-    print(header)
+
     img_report = ReportImage(log_obj.log_path, id_process,
                              conf_age=conf['age'], conf_child=conf['child'], 
                              conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
@@ -294,5 +295,27 @@ def analysis_down():
 def clear():
     global log_obj
     log_obj.clear()
+    log_obj = Log()
+    
+    global filesearcher
+    global id_process
+    global global_path
+    global img_report
+    global vid_report
+    
+    file_searcher = None
+    id_process = ''
+    global_path = 'Caminho do Diretório'
+    img_report, vid_report = None, None
+    gc.collect()
+    
+    return '', 204
+
+
+@main.route('/showmedia/<path:img_url>', methods=['POST', 'GET']) 
+def showmedia(img_url):
+    
+    img_url = str(Path(img_url)).encode('utf-8')
+    dialog.show_local_image(img_url)
     return '', 204
     

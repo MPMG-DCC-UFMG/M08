@@ -3,7 +3,7 @@ import datetime
 import time
 import numpy as np
 import os.path
-import cv2
+import cv2, gc
 from PIL import Image
 from io import BytesIO
 import skimage
@@ -553,6 +553,7 @@ class VideoProcessor:
             #print("del models")
             del detector
             del model_nsfw
+            gc.collect()
         except Exception as e:
             print("ex del models")
 

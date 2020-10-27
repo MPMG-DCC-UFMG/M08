@@ -2,6 +2,7 @@ from configcnn import ConfigCNN
 import pandas as pd
 import numpy as np
 import os, re, cv2
+from pathlib import Path
 from time import gmtime, strftime
 
 class ReportImage():
@@ -106,7 +107,9 @@ class ReportImage():
     
     def make_clickable(self, url):
         name = os.path.basename(url)
-        return '<a href="{}">{}</a>'.format(url,name)
+#         return '<a href="{}">{}</a>'.format(url,name)
+        url = url.replace('\\', '\\\\')
+        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\"> {} </a>'.format(url, name)
 
     def color_nsfw(self, data):
 
@@ -331,7 +334,7 @@ class ReportVideo():
         log_df = pd.DataFrame(self.results)
 
         log_style = (log_df.style.apply(self.color_nsfw, axis=1)
-                           .format({'Thumbnail': self.path_to_image_html})
+#                            .format({'Thumbnail': self.path_to_image_html})
                            .format({'Thumbnail': self.make_clickable})
                            .format({'Arquivo': self.make_clickable})
                            .set_table_styles(styles))
@@ -346,13 +349,10 @@ class ReportVideo():
         table_id = html[idx:].split('\"')[1]
         return html, '#' + table_id
     
-    
-    def path_to_image_html(path):
-        return '<img src="'+ path + '" width="60" >'
-    
     def make_clickable(self, url):
         name = os.path.basename(url)
-        return '<a href="{}">{}</a>'.format(url,name)
+        url = url.replace('\\', '\\\\')
+        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\"> {} </a>'.format(url, name)
 
     def color_nsfw(self, data):
 
