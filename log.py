@@ -2,12 +2,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os, random
-from shutil import rmtree
+from datetime import datetime
+from shutil import rmtree, copyfile
     
 
 class Log():
     
-    def __init__(self,):
+    def __init__(self):
         
         log_path = os.path.join(os.getcwd(), 'M08', 'log')
         if not os.path.isdir(log_path):
@@ -22,7 +23,9 @@ class Log():
         self.id_analysis = None
         self.result_file = None
         
-        self.logfile  = os.path.join(log_path, 'log_temp{}.txt'.format( int(random.random()*1e5) ))
+        today = datetime.now()
+        self.logfile  = os.path.join(log_path, 'log_temp_{}.txt'.format( today.strftime("%Y%m%d_%H%M%S") ))
+        
         self.results  = {'images': [], 'videos': [], 'rootpath': ''}
         self.buffer  = ''
     
@@ -35,13 +38,15 @@ class Log():
         self.result_file = os.path.join(self.log_path, id_analysis)
         self.result_file += '.npz'
         
+        self.send(('imprime', 'Identificador da análise: {}'.format(id_analysis)))
+        
     def send(self, tup):
         
         mode = tup[0]
         
         if mode == 'imprime':
-            msg = tup[1]
-            self.buffer += msg + '\n'
+            msg = tup[1] + '\n'
+            self.buffer += msg 
             
             fp = open(self.logfile, 'a+')
             fp.write(msg)
@@ -70,17 +75,27 @@ class Log():
         
             
         elif mode == 'finish':                    
-            os.remove(self.logfile)
             if len(self.results['images']) > 0 or len(self.results['videos']) > 0:
                 np.savez_compressed(self.result_file, images=self.results['images'] , 
                                                       videos=self.results['videos'],
                                                       rootpath=self.results['rootpath'])
                 
-    def clear(self,):
+    def dump(self, savepath):
         
-        save_dir = os.path.join(self.log_path, self.id_analysis)
-        if os.path.isdir(save_dir):
-            rmtree(save_dir)
+        time_ = '_'.join(self.logfile.split('_')[-2:])
+        time_ = time_[:-4]
+        
+        logpath = os.path.join(savepath, 'log_'+str(self.id_analysis)+'_'+time_+'.txt')
+        copyfile(self.logfile, logpath)
+        log.buffer = ''
+        os.remove(self.logfile)
+        
+        npzpath = os.path.join(savepath, 'dados_'+str(self.id_analysis)+'_'+time_+'.npz')
+        copyfile(self.result_file, npzpath)
+        
+        logdir = os.path.join(self.log_path, self.id_analysis)
+        if os.path.isdir(logdir):
+            rmtree(logdir)
             
             
         

@@ -49,7 +49,7 @@ $(document).ready( function () {
 				    </div>
 			  </div>
   
-              <div class="level-right">
+               <div class="level-right">
                   <div class="collumn is-fluid ">
                       <script>
                           $(function(){
@@ -61,19 +61,8 @@ $(document).ready( function () {
                               });
                           });
                       </script>
-					  <a id="analysis_down" class="button has-background-info-dark has-text-white is-fullwidth">Baixar Relatório</a>
+					  <a id="analysis_down" class="button is-link is-medium is-fullwidth">Exportar Análise</a>
 					  
-					  <script>
-                          $(function(){
-                              $("#analysis_clear").click(function(event){
-                                  $.getJSON('/clear', { }, function(data){
-  
-                                  });
-                                  return false;
-                              });
-                          });
-                      </script>
-					  <a id="analysis_clear" class="button has-background-danger-dark has-text-white is-fullwidth mt-5">Limpar Dados</a>
                   </div>
               </div>
           </nav>

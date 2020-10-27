@@ -3,18 +3,21 @@ import pandas as pd
 import numpy as np
 import os, re, cv2
 from pathlib import Path
+from datetime import datetime
 from time import gmtime, strftime
 
 class ReportImage():
     
-    def __init__(self, logpath, filename, conf_age=0.7, conf_child=0.7, conf_face=0.8, conf_nsfw=0.3):
+    def __init__(self, logpath, filename, log_obj, conf_age=0.7, conf_child=0.7, conf_face=0.8, conf_nsfw=0.3):
         self.savepath = logpath
         self.filename = filename
-
+        
+        self.log_obj = log_obj
+                     
         self.logfile = None
         if os.path.isfile(os.path.join(logpath, filename+'.npz')):
             self.logfile  = np.load(os.path.join(logpath, filename+'.npz'), allow_pickle=True)
-        
+                   
         self.rootpath = self.logfile['rootpath']
         self.conf = {'age': conf_age, 'child': conf_child, 'face': conf_face, 'nsfw': conf_nsfw}
         self.results  = {}
@@ -47,6 +50,10 @@ class ReportImage():
         self.results  = {'Arquivo': [], 'NSFW': [], 'Faces': [],  
                          'Idades': [], 'Crianças': [], 'Classe': []}
         
+        self.log_obj.send(('imprime', 
+                           '{} - Iniciando criação de relatório de imagens'.format(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+                          ))
+        
         if self.logfile is not None: 
             results = self.logfile['images']
 
@@ -71,8 +78,11 @@ class ReportImage():
 
                 self.results['Classe'].append(classes)
 
-        report, table_id = self.html_style()
+        self.log_obj.send(('imprime', 
+                           '{} - Relatório concluído. Criando página.'.format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")) 
+                          ))
         
+        report, table_id = self.html_style()             
         if return_path:
             html_path = os.path.join(self.savepath, self.filename+'.html') 
             report.to_html(html_path)
@@ -97,7 +107,8 @@ class ReportImage():
                            .set_table_styles(styles))
 
         if excel_path is not None:
-            log_style.to_excel(os.path.join(excel_path, self.filename+'_imagens.xlsx') )
+            time_ = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_style.to_excel(os.path.join(excel_path, self.filename+'_'+time_+'_imagens.xlsx') )
             return
 
         html = log_style.render(table_id=self.filename)
@@ -135,10 +146,12 @@ class ReportImage():
     
 class ReportVideo():
     
-    def __init__(self, logpath, filename, conf_age=0.8, conf_child=0.6, conf_face=0.8, conf_nsfw=0.3):
+    def __init__(self, logpath, filename, log_obj, conf_age=0.8, conf_child=0.6, conf_face=0.8, conf_nsfw=0.3):
         self.savepath = logpath
         self.filename = filename
 
+        self.log_obj = log_obj
+        
         self.logfile = None
         if os.path.isfile(os.path.join(logpath, filename+'.npz')):
             self.logfile  = np.load(os.path.join(logpath, filename+'.npz'), allow_pickle=True)
@@ -174,6 +187,9 @@ class ReportVideo():
         
         self.results  = {'Arquivo': [], 'Timestamp': [], 'Thumbnail': [], 'Classe': []}
         
+        self.log_obj.send(('imprime', 
+                           '{} - Iniciando criação de relatório de vídeos'.format(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+                          ))              
         if self.logfile is not None: 
             videos = self.logfile['videos']
 
@@ -240,7 +256,11 @@ class ReportVideo():
                 
                 retimages = [ strftime("%H:%M:%S", gmtime(fr/float(video['frames_video']["fps"]))) for fr in retimages] 
                 self.results['Timestamp'].extend(retimages)
-            
+        
+        self.log_obj.send(('imprime', 
+                           '{} - Relatório concluído. Criando página.'.format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")) 
+                          ))
+         
         report, table_id = self.html_style()
         
         if return_path:
@@ -340,7 +360,8 @@ class ReportVideo():
                            .set_table_styles(styles))
 
         if excel_path is not None:
-            log_style.to_excel(os.path.join(excel_path, self.filename+'_videos.xlsx') )
+            time_ = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_style.to_excel(os.path.join(excel_path, self.filename+'_'+time_+'_videos.xlsx') )
             return
         
         html = log_style.render(table_id=self.filename)

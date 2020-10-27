@@ -75,7 +75,7 @@
 								<div class="level-right">
 									<div class="collumns  ">
 										<div class="column mt-6 pt-6 pl-3 pr-3">
-											<form action="/settings_search" method="post">
+											<form action="/settings/search" method="post">
 												
 												<div class="control mb-2">
 													<input class="input" type="text" value={{ conf_nsfw }} name="conf_nsfw" />
@@ -139,6 +139,24 @@
 	
 		
         </div>
+    </div>
+</section>
+
+<section class="section has-background-link-light">
+    <div class="container is-fullwidth">
+		<form action="/log/search" method="post">
+		<label class="subtitle is-3">Log do Processamento </label> 
+		<button type="submit" class="button is-link ml-2"> 
+			<span> Atualizar </span>
+		</button>
+		</form>
+
+		<main role="main" class="column box-deco has-background-white">
+			<article class="blog-post">
+				<p id="log" style='text-align: left; overflow-y: scroll; max-height: 300px; font-size: medium; white-space: pre-wrap'> {{ buffer }} </p>
+			</article>
+		</main>
+
     </div>
 </section>
 

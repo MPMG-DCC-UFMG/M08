@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys, os, time, gc
+from datetime import datetime
 from pathlib import Path
 import subprocess
 import warnings
@@ -63,6 +64,11 @@ def set_analysis():
 
     analysis_path = dialog._open_dialog_analysis()
     if analysis_path is not None and analysis_path != '':
+        log_obj.send(('imprime', 
+                      '{1} - [{0}] Importando dados de análise'.format(current_user.name,
+                                                                     datetime.now().strftime("%d/%m/%Y %H:%M:%S")) 
+                     ))
+        
         idx = analysis_path.rfind('.')
         id_process = os.path.basename(analysis_path[:idx])
 
@@ -100,13 +106,18 @@ def SOdialog():
 
     local_path = dialog._open_dialog_file()
     if local_path is not None and local_path != '':
+        log_obj.send(('imprime', 
+                      '{1} - [{9}] Nova análise'.format(current_user.name,
+                                                     datetime.now().strftime("%d/%m/%Y %H:%M:%S")) 
+                     ))
+        
         global_path = local_path
-    file_searcher = FileSearcher(local_path)
-    file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
+        file_searcher = FileSearcher(local_path)
+        file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
+
+        log_obj.set_rootpath(local_path)
     
-    log_obj.set_rootpath(local_path)
-    
-    return jsonify(path=global_path)
+    return jsonify(path=local_path)
 
 @main.route('/idprocess', methods=['GET','POST'])
 @login_required
@@ -122,14 +133,14 @@ def IDset():
     
     id_process = id_
     log_obj.set_id(id_process)
-    log_obj.send(('imprime', 'identificador {} definido com sucesso'.format(id_process)))
     return redirect(url_for('main.new_analysis')) 
 
-@main.route('/log', methods=['POST', 'GET'])
+@main.route('/log/<window>', methods=['POST', 'GET'])
 @login_required
-def refresh_log():
+def refresh_log(window):
 #     flash(log_obj.buffer, 'log')
-    return redirect(url_for('main.new_analysis')) 
+    if window == 'search': return redirect(url_for('main.search_analysis'))
+    else: return redirect(url_for('main.new_analysis')) 
 
 
 @main.route('/IMGprocessor', methods=['POST', 'GET'])
@@ -180,31 +191,22 @@ def IMGVIDprocessor():
 #                      RELATÓRIO                   #
 ####################################################
 
-@main.route('/settings_search', methods=['POST', 'GET'])
+@main.route('/settings/<window>', methods=['POST', 'GET'])
 @login_required
-def settings_search():
+def settings_search(window):
     
     global conf
+    global log_obj
     
     conf['nsfw']  = float(request.form.get('conf_nsfw'))
     conf['face']  = float(request.form.get('conf_face'))
     conf['child'] = float(request.form.get('conf_child'))
     conf['age']   = float(request.form.get('conf_age'))
     
-    return redirect(url_for('main.search_analysis')) 
-
-@main.route('/settings_new', methods=['POST', 'GET'])
-@login_required
-def settings_new():
+    log_obj.send(('imprime', 'Limiares definidos: '+str(conf) ))
     
-    global conf
-    
-    conf['nsfw']  = float(request.form.get('conf_nsfw'))
-    conf['face']  = float(request.form.get('conf_face'))
-    conf['child'] = float(request.form.get('conf_child'))
-    conf['age']   = float(request.form.get('conf_age'))
-    
-    return redirect(url_for('main.new_analysis')) 
+    if window == 'search': return redirect(url_for('main.search_analysis'))
+    else: return redirect(url_for('main.new_analysis'))  
     
 
 @main.route('/IMGreport', methods=['POST', 'GET'])
@@ -217,7 +219,7 @@ def IMGreport():
     with open('./M08/templates/report_header.html', 'r', encoding='utf-8') as f:
         header = f.read()
 
-    img_report = ReportImage(log_obj.log_path, id_process,
+    img_report = ReportImage(log_obj.log_path, id_process, log_obj,
                              conf_age=conf['age'], conf_child=conf['child'], 
                              conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
     
@@ -237,7 +239,7 @@ def VIDreport():
     with open('./M08/templates/report_header.html', 'r', encoding='utf-8') as f:
         header = f.read()
     
-    vid_report = ReportVideo(log_obj.log_path, id_process,
+    vid_report = ReportVideo(log_obj.log_path, id_process,log_obj,
                              conf_age=conf['age'], conf_child=conf['child'], 
                              conf_face=conf['face'], conf_nsfw=conf['nsfw'])  
     
@@ -257,13 +259,19 @@ def IMGVIDreport():
     with open('./M08/templates/report_vid_img_header.html', 'r', encoding='utf-8') as f:
         header = f.read()
     
-    img_report = ReportImage(log_obj.log_path, id_process) 
+    img_report = ReportImage(log_obj.log_path, id_process, log_obj,
+                             conf_age=conf['age'], conf_child=conf['child'], 
+                             conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
+    
     html_img, id_tabela = img_report.generate_report(return_path=False)
     html_img = '<section class=\"section has-background-white\">' + \
                    '<h3 class=\"subtitle is-3 has-text-centered has-background-link-light pb-2\">Imagens</h3>' + html_img + \
                 '</section>'
     
-    vid_report = ReportVideo(log_obj.log_path, id_process) 
+    vid_report = ReportVideo(log_obj.log_path, id_process, log_obj,
+                             conf_age=conf['age'], conf_child=conf['child'], 
+                             conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
+    
     html_vid, id_tabela_2 = vid_report.generate_report(return_path=False)
     html_vid = '<section class=\"section has-background-white\">' + \
                    '<h3 class=\"subtitle is-3 has-text-centered has-background-link-light pb-2\">Vídeos</h3>' + html_vid + \
@@ -278,37 +286,33 @@ def IMGVIDreport():
 def analysis_down():
     global img_report
     global vid_report
+    global id_process
+    global log_obj
     
     savepath = None
     
     savepath = dialog._open_dialog_file()
-    if savepath is not None and savepath != '':
-        if img_report is not None:
-            img_report.html_style(savepath)
-        if vid_report is not None:
-            vid_report.html_style(savepath)
-            
-    return '', 204
-
-@main.route('/clear', methods=['POST', 'GET'])
-@login_required
-def clear():
-    global log_obj
-    log_obj.clear()
-    log_obj = Log()
+    savepath = os.path.join(savepath, id_process)
+    if savepath is None or savepath == '':
+        return '', 204
     
-    global filesearcher
-    global id_process
-    global global_path
-    global img_report
-    global vid_report
+    log_obj.send(('imprime', 
+                      '{1} - [{0}] '.format(current_user.name,datetime.now().strftime("%d/%m/%Y %H:%M:%S")) +
+                      'Exportando dados.'
+                 ))
     
-    file_searcher = None
-    id_process = ''
-    global_path = 'Caminho do Diretório'
+    if not os.path.isdir(savepath):
+        os.mkdir(savepath)
+    
+    if img_report is not None:
+        img_report.html_style(savepath)
+    if vid_report is not None:
+        vid_report.html_style(savepath)
+    
+    log_obj.dump(savepath)
     img_report, vid_report = None, None
     gc.collect()
-    
+            
     return '', 204
 
 
