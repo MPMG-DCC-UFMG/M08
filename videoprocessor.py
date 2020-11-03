@@ -17,6 +17,7 @@ class VideoProcessor:
 
     def __init__(self, files_dict, dir_model=""):
         self.file_names = list(files_dict.keys())
+        self.files_dict = files_dict
         self.timing = {"detect_faces": [], "get_faces_mtcnn2": [], "nsfw": [], "age": [], "all": []}
 
     def conv_pred(p, verbose=False):
@@ -206,7 +207,7 @@ class VideoProcessor:
 #                allpreds, conf_faces, ret_img
         
         result = {'prob_nsfw': '', 'conf_faces': '', 'prob_age': '', 
-                                  'prob_child':'', 'prob_gender': ''}
+                  'prob_child':'', 'prob_gender': ''}
         result['prob_nsfw'] = prob_nsfw
         result['conf_faces'] = conf_faces
         result['prob_age'] = age_pred
@@ -504,10 +505,11 @@ class VideoProcessor:
             for k, target_file in enumerate(sorted(self.file_names)):
                 if not os.path.isfile(target_file): continue
                 
+                start = time.time()
                 retaf = self.analyze_frames(target_file, child_conn, model_age, sess,
                                             model_nsfw, fn_load_image, detector, timing_tmp, verbose)
                 frames_video, qtdimgs, num_frames, fps = retaf
-    
+                end = time.time()
                 if qtdimgs == 0:
                     # videotmp = os.path.join(self.source_path, target_hash + ".avi") troca por causa do iped
                     videotmp = os.path.join(self.files_path, "videos_ffmpeg", target_hash + "_tmp.avi")
@@ -529,6 +531,7 @@ class VideoProcessor:
                 frames_video["fps"] = fps
                 frames_video["num_frames"] = num_frames
                 frames_video["nomevideo"] = target_file
+                frames_video["hash"] = self.files_dict[target_file]['hash']
 
                 child_conn.send(("video_file", (frames_video, target_file, timing_tmp)))
                 del_mtcnn += 1
@@ -536,7 +539,7 @@ class VideoProcessor:
                 percentage = (k+1) / float(len(self.file_names))
                 child_conn.send(("imprime", 'Progresso {:.0f}%: '.format(percentage*100)  + 
                                                  '|{:25}| '.format('#'*int(25*percentage))   +  
-                                                 'Tempo decorrido: {:.3f}, '.format(np.sum(timing_tmp['all'])) +
+                                                 'Tempo decorrido: {:.3f}, '.format(end-start) +
                                                  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%z")
                                ))
                 

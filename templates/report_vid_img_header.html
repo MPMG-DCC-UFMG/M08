@@ -11,8 +11,15 @@
         font-size: 20px;
         color: #333;
     }
+	.col_heading.level0{
+		min-width: 90px;
+	}
+	.row_heading.level0{
+		min-width: 40px;
+	}
     {{ id_tabela }} th {
         color: black
+		padding: 5px;
     }
 </style>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
@@ -51,6 +58,7 @@ $(document).ready( function () {
   
                <div class="level-right">
                   <div class="collumn is-fluid ">
+
                       <script>
                           $(function(){
                               $("#analysis_down").click(function(event){

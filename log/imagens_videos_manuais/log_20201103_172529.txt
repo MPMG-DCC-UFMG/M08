@@ -1,0 +1,7 @@
+03/11/2020 17:25:58 - [Camila Laranjeira] Importando dados de análise
+Identificador da análise: imagens_videos_manuais
+03/11/2020 17:25:59 - Iniciando criação de relatório de imagens
+03/11/2020 17:25:59 - Relatório concluído. Criando página.
+03/11/2020 17:25:59 - Iniciando criação de relatório de vídeos
+03/11/2020 17:25:59 - Relatório concluído. Criando página.
+03/11/2020 17:26:21 - [Camila Laranjeira] Exportando dados.

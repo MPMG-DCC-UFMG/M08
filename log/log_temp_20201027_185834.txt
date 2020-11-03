@@ -1,7 +1,0 @@
-27/10/2020 18:58:37 - [Camila Laranjeira] Importando dados de análise
-Identificador da análise: test_path
-27/10/2020 18:58:37 - Iniciando criação de relatório de imagens
-27/10/2020 18:58:37 - Relatório concluído. Criando página.
-27/10/2020 18:58:45 - Iniciando criação de relatório de imagens
-27/10/2020 18:58:46 - Relatório concluído. Criando página.
-27/10/2020 18:58:55 - [Camila Laranjeira]Exportando dados.

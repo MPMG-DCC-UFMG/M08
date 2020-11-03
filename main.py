@@ -107,7 +107,7 @@ def SOdialog():
     local_path = dialog._open_dialog_file()
     if local_path is not None and local_path != '':
         log_obj.send(('imprime', 
-                      '{1} - [{9}] Nova análise'.format(current_user.name,
+                      '{1} - [{0}] Nova análise'.format(current_user.name,
                                                      datetime.now().strftime("%d/%m/%Y %H:%M:%S")) 
                      ))
         
@@ -148,6 +148,7 @@ def refresh_log(window):
 def IMGprocessor():
     global file_searcher
     global log_obj
+    global id_process
     
     if id_process is '': 
         flash('Defina o identificador da análise.'.format(id_process), 'error')
@@ -162,6 +163,7 @@ def IMGprocessor():
 def VIDprocessor():
     global file_searcher
     global log_obj
+    global id_process
 
     if id_process is '': 
         flash('Defina o identificador da análise.'.format(id_process), 'error')
@@ -264,18 +266,14 @@ def IMGVIDreport():
                              conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
     
     html_img, id_tabela = img_report.generate_report(return_path=False)
-    html_img = '<section class=\"section has-background-white\">' + \
-                   '<h3 class=\"subtitle is-3 has-text-centered has-background-link-light pb-2\">Imagens</h3>' + html_img + \
-                '</section>'
+    html_img =   '<h3 class=\"subtitle is-3 has-text-centered has-background-white pb-2\">Imagens</h3>' + html_img #+ \
     
     vid_report = ReportVideo(log_obj.log_path, id_process, log_obj,
                              conf_age=conf['age'], conf_child=conf['child'], 
                              conf_face=conf['face'], conf_nsfw=conf['nsfw']) 
     
     html_vid, id_tabela_2 = vid_report.generate_report(return_path=False)
-    html_vid = '<section class=\"section has-background-white\">' + \
-                   '<h3 class=\"subtitle is-3 has-text-centered has-background-link-light pb-2\">Vídeos</h3>' + html_vid + \
-                '</section>'
+    html_vid = '<h3 class=\"subtitle is-3 mt-3 has-text-centered has-background-white pb-2\">Vídeos</h3>' + html_vid #+ \
     
     
     return render_template_string(header+html_img+html_vid+'{% endblock %}', id_report = id_process, 
@@ -309,10 +307,11 @@ def analysis_down():
     if vid_report is not None:
         vid_report.html_style(savepath)
     
-    log_obj.dump(savepath)
     img_report, vid_report = None, None
     gc.collect()
-            
+    
+    log_obj.dump(savepath)
+    
     return '', 204
 
 
@@ -322,4 +321,3 @@ def showmedia(img_url):
     img_url = str(Path(img_url)).encode('utf-8')
     dialog.show_local_image(img_url)
     return '', 204
-    

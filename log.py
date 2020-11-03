@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os, random
 from datetime import datetime
-from shutil import rmtree, copyfile
+from shutil import rmtree, copyfile, move
     
 
 class Log():
@@ -17,14 +17,14 @@ class Log():
         
         all_logs = []
         for logs in os.listdir(log_path):
-            all_logs.append(logs[:-4])
+            all_logs.append(logs)
         self.all_logs = set(all_logs)
         
         self.id_analysis = None
         self.result_file = None
         
         today = datetime.now()
-        self.logfile  = os.path.join(log_path, 'log_temp_{}.txt'.format( today.strftime("%Y%m%d_%H%M%S") ))
+        self.logfile  = os.path.join(log_path, 'log_{}.txt'.format( today.strftime("%Y%m%d_%H%M%S") ))
         
         self.results  = {'images': [], 'videos': [], 'rootpath': ''}
         self.buffer  = ''
@@ -34,6 +34,18 @@ class Log():
         self.results['rootpath'] = rootpath
     
     def set_id(self, id_analysis, empty=True):
+        
+        path = os.path.join(self.log_path, id_analysis)
+        if not os.path.isdir(path):
+            os.mkdir(path)
+            
+        self.log_path = path
+        new_logfile  = os.path.join(self.log_path, os.path.basename(self.logfile))
+        if os.path.isfile(self.logfile): 
+            move(self.logfile, new_logfile)
+       
+        self.logfile = new_logfile
+        
         self.id_analysis = id_analysis
         self.result_file = os.path.join(self.log_path, id_analysis)
         self.result_file += '.npz'
@@ -80,25 +92,26 @@ class Log():
                                                       videos=self.results['videos'],
                                                       rootpath=self.results['rootpath'])
                 
-    def dump(self, savepath):
-        
+    def dump(self, savepath, apagar=False):
+              
         time_ = '_'.join(self.logfile.split('_')[-2:])
         time_ = time_[:-4]
         
         logpath = os.path.join(savepath, 'log_'+str(self.id_analysis)+'_'+time_+'.txt')
         copyfile(self.logfile, logpath)
-        log.buffer = ''
-        os.remove(self.logfile)
+        self.buffer = ''
         
         npzpath = os.path.join(savepath, 'dados_'+str(self.id_analysis)+'_'+time_+'.npz')
         copyfile(self.result_file, npzpath)
         
-        logdir = os.path.join(self.log_path, self.id_analysis)
-        if os.path.isdir(logdir):
-            rmtree(logdir)
-            
-            
         
+#         if apagar:
+#             os.remove(self.logfile)
+#             os.remove(self.result_file)
+        
+#             logdir = os.path.join(self.log_path, self.id_analysis)
+#             if os.path.isdir(logdir):
+#                 rmtree(logdir)
             
         
         

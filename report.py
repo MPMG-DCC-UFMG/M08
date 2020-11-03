@@ -47,7 +47,7 @@ class ReportImage():
     
     def generate_report(self, return_path=True):
         
-        self.results  = {'Arquivo': [], 'NSFW': [], 'Faces': [],  
+        self.results  = {'Arquivo': [], 'Hash': [], 'NSFW': [], 'Faces': [],  
                          'Idades': [], 'Crianças': [], 'Classe': []}
         
         self.log_obj.send(('imprime', 
@@ -61,10 +61,11 @@ class ReportImage():
                 classes = ''
 
                 self.results['Arquivo'].append(result['Arquivo'])
+                self.results['Hash'].append(result['data']['hash'])
 
                 # NSFW
                 nsfw = np.round(result['data']['prob_nsfw'], 3)
-                self.results['NSFW'].append('{:.3f}'.format(nsfw))
+                self.results['NSFW'].append('{:2.0f}%'.format(nsfw*100))
                 if nsfw >= self.conf['nsfw']: classes += 'Pode conter pornografia. '
 
                 # Número de Faces, Idades, Número de Crianças
@@ -102,15 +103,22 @@ class ReportImage():
         ]
 
         log_df = pd.DataFrame(self.results)
-        log_style = (log_df.style.apply(self.color_nsfw, axis=1)
-                           .format({'Arquivo': self.make_clickable})
-                           .set_table_styles(styles))
-
+        
         if excel_path is not None:
+            
+            log_style = (log_df.style.apply(self.color_nsfw, axis=1)
+                           .set_table_styles(styles))
+        
             time_ = datetime.now().strftime("%Y%m%d_%H%M%S")
             log_style.to_excel(os.path.join(excel_path, self.filename+'_'+time_+'_imagens.xlsx') )
             return
 
+        
+        log_df = log_df.drop('Hash', axis=1)
+        log_style = (log_df.style.apply(self.color_nsfw, axis=1)
+                           .format({'Arquivo': self.make_clickable})
+                           .set_table_styles(styles))
+        
         html = log_style.render(table_id=self.filename)
         idx = html.find('table id="')
         table_id = html[idx:].split('\"')[1]
@@ -185,7 +193,7 @@ class ReportVideo():
     
     def generate_report(self, return_path=True):
         
-        self.results  = {'Arquivo': [], 'Timestamp': [], 'Thumbnail': [], 'Classe': []}
+        self.results  = {'Arquivo': [], 'Hash': [], 'Thumbnail': [], 'Timestamp': [], 'Classe': []}
         
         self.log_obj.send(('imprime', 
                            '{} - Iniciando criação de relatório de vídeos'.format(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
@@ -224,6 +232,7 @@ class ReportVideo():
                     if len(retimages) >= self.max_frames: break
                     idx = child_porn.loc[row]['frame']
                     self.results['Arquivo'].append(video['Arquivo'])
+                    self.results['Hash'].append( frames['hash'] )
                     retimages.append(idx)   
                     self.results['Classe'].append('Pode conter pornografia. Pode conter menores de idade.')
 
@@ -231,6 +240,7 @@ class ReportVideo():
                     if len(retimages) >= self.max_frames: break
                     idx = porn.loc[row]['frame']
                     self.results['Arquivo'].append(video['Arquivo'])
+                    self.results['Hash'].append( frames['hash'] )
                     retimages.append(idx)   
                     self.results['Classe'].append('Pode conter pornografia.')
 
@@ -240,6 +250,7 @@ class ReportVideo():
                     if len(retimages) >= self.max_frames: break
                     idx = child.loc[row]['frame']
                     self.results['Arquivo'].append(video['Arquivo'])
+                    self.results['Hash'].append( frames['hash'] )
                     retimages.append(idx)   
                     self.results['Classe'].append('Pode conter menores de idade.')
 
@@ -248,6 +259,7 @@ class ReportVideo():
                     if len(retimages) >= self.max_frames: break
                     idx = results.loc[row]['frame']
                     self.results['Arquivo'].append(video['Arquivo'])
+                    self.results['Hash'].append( frames['hash'] )
                     retimages.append(idx)  
                     self.results['Classe'].append([''])
     
@@ -276,7 +288,17 @@ class ReportVideo():
         cap = cv2.VideoCapture(filename)
         retframes = []
         
+        save_dir = os.path.join(self.savepath, 'thumbnails')
+        if not os.path.isdir(save_dir):
+            os.mkdir(save_dir)
+        
         for pos_frame in frames:
+            
+            save_file = os.path.join(save_dir, os.path.basename(filename) + '_' + str(pos_frame) + '.jpg') 
+            if os.path.isfile(save_file):
+                retframes.append(save_file)
+                continue
+            
             data = all_data[pos_frame]
             cap.set(cv2.CAP_PROP_POS_FRAMES, pos_frame)
             ret, frame = cap.read()
@@ -330,13 +352,9 @@ class ReportVideo():
                     cv2.putText(imgwork, label_child_adult, (max(x, 10), max(y, 20)), + font, szfont, cor,
                                 bold, cv2.LINE_AA)
                     
-                save_dir = os.path.join(self.savepath, self.filename)
-                if not os.path.isdir(save_dir):
-                    os.mkdir(save_dir)
-                save_file = os.path.join(save_dir, os.path.basename(filename) + '_' + str(pos_frame) + '.jpg') 
-
-                cv2.imwrite(save_file, imgwork)
-                retframes.append(save_file)
+            imgwork = cv2.cvtColor(imgwork, cv2.COLOR_RGB2BGR)
+            cv2.imwrite(save_file, imgwork)
+            retframes.append(save_file)
                     
         return retframes
         
@@ -353,16 +371,20 @@ class ReportVideo():
         
         log_df = pd.DataFrame(self.results)
 
-        log_style = (log_df.style.apply(self.color_nsfw, axis=1)
-#                            .format({'Thumbnail': self.path_to_image_html})
-                           .format({'Thumbnail': self.make_clickable})
-                           .format({'Arquivo': self.make_clickable})
-                           .set_table_styles(styles))
-
         if excel_path is not None:
+            log_style = (log_df.style.apply(self.color_nsfw, axis=1)
+                           .set_table_styles(styles))
+            
             time_ = datetime.now().strftime("%Y%m%d_%H%M%S")
             log_style.to_excel(os.path.join(excel_path, self.filename+'_'+time_+'_videos.xlsx') )
             return
+        
+        
+        log_df = log_df.drop('Hash', axis=1)
+        log_style = (log_df.style.apply(self.color_nsfw, axis=1)
+                           .format({'Thumbnail': self.make_clickable_thumb})
+                           .format({'Arquivo': self.basename})
+                           .set_table_styles(styles))
         
         html = log_style.render(table_id=self.filename)
 
@@ -370,8 +392,19 @@ class ReportVideo():
         table_id = html[idx:].split('\"')[1]
         return html, '#' + table_id
     
+    def basename(self, name):
+        return os.path.basename(name)
+    
     def make_clickable(self, url):
         name = os.path.basename(url)
+        url = url.replace('\\', '\\\\')
+        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\"> {} </a>'.format(url, name)
+    
+    def make_clickable_thumb(self, url):
+        name = os.path.basename(url)
+        idx  = name.rfind('_')
+        name = name[idx+1:]
+        
         url = url.replace('\\', '\\\\')
         return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\"> {} </a>'.format(url, name)
 

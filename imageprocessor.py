@@ -20,6 +20,7 @@ class ImageProcessor():
     
     def __init__(self, files_dict, log):
         self.file_names = list(files_dict.keys())
+        self.files_dict = files_dict
         self.log = log
         
         self.detector = None
@@ -99,10 +100,11 @@ class ImageProcessor():
                     j = 0 # count predictions
                     for k, filename in enumerate(filenames):
                         result = {'prob_nsfw': '', 'conf_faces': '', 'prob_age': '', 
-                                  'prob_child':'', 'prob_gender': ''}
+                                  'prob_child':'', 'prob_gender': '', 'hash': ''}
                         
                         filename = filename.decode("utf-8")
                         
+                        result['hash'] = self.files_dict[filename]['hash']
                         result['prob_nsfw'] = prob_nsfw[k][1]
                         
                         if conf_faces[idx[k]] != -1.:

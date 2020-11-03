@@ -1,0 +1,40 @@
+03/11/2020 17:21:53 - [Camila Laranjeira] Nova análise
+Inicia busca por imagens em: C:/Users/milal/Downloads/batch_download - 2020-11-03 17:21:53
+Calcula hashs dos arquivos ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff']
+ Diretório root_dir C:/Users/milal/Downloads/batch_download
+ Tamanho minimo 5120
+    --> 200
+    --> 382
+Número de arquivos de imagem únicos: 229
+
+Inicia busca por vídeos em: C:/Users/milal/Downloads/batch_download - 2020-11-03 17:21:53
+Calcula hashs dos arquivos hashs ['.wav', '.qt', '.mpeg', '.mpg', '.avi', '.mp4', '.3gp', '.mov', '.lvl', '.m4v', '.wmv']
+ Diretório root_dir C:/Users/milal/Downloads/batch_download
+ Tamanho minimo 102400
+    --> 5
+Número de arquivos de vídeo únicos: 3
+
+Finalizado - 2020-11-03 17:21:53
+Identificador da análise: imagens_videos_manuais
+Iniciando processamento de imagens. 2020-11-03 17:22:09
+Todos os modelos foram carregados. 2020-11-03 17:22:17
+Progresso 14%: |###                      | Tempo decorrido: 8.831, 2020-11-03 17:22:26
+Progresso 28%: |######                   | Tempo decorrido: 6.414, 2020-11-03 17:22:32
+Progresso 42%: |##########               | Tempo decorrido: 7.826, 2020-11-03 17:22:40
+Progresso 56%: |#############            | Tempo decorrido: 9.381, 2020-11-03 17:22:49
+Progresso 70%: |#################        | Tempo decorrido: 12.436, 2020-11-03 17:23:02
+Progresso 84%: |####################     | Tempo decorrido: 4.195, 2020-11-03 17:23:06
+Progresso 98%: |######################## | Tempo decorrido: 4.935, 2020-11-03 17:23:11
+Progresso 100%: |#########################| Tempo decorrido: 0.492, 2020-11-03 17:23:12
+Finalizado o processamento de imagens2020-11-03 17:23:12
+2020-11-03 17:23:12
+Iniciando análise de vídeos. 2020-11-03 17:23:17
+Progresso 33%: |########                 | Tempo decorrido: 19.339, 2020-11-03 17:23:36
+Progresso 67%: |################         | Tempo decorrido: 29.629, 2020-11-03 17:24:06
+Progresso 100%: |#########################| Tempo decorrido: 30.812, 2020-11-03 17:24:37
+2020-11-03 17:24:37
+Análise de vídeos completa. Verifique o log em caso de erros.
+03/11/2020 17:24:41 - Iniciando criação de relatório de imagens
+03/11/2020 17:24:41 - Relatório concluído. Criando página.
+03/11/2020 17:24:41 - Iniciando criação de relatório de vídeos
+03/11/2020 17:24:42 - Relatório concluído. Criando página.
