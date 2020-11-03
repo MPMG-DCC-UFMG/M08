@@ -17,6 +17,13 @@ def calcula_md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+def calcula_sha256(fname):
+    hash_sha256 = hashlib.sha256()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_sha256.update(chunk)
+    return hash_sha256.hexdigest()
+
 
 def get_arquivos_hashes_subdir(root_dir, extensions, min_size=4096, verbose_gf=False, signal_msg=None,
                                task_id=""):
@@ -43,12 +50,12 @@ def get_arquivos_hashes_subdir(root_dir, extensions, min_size=4096, verbose_gf=F
             if ind > 0 and os.path.isfile(arquivo_abs) and sz >= min_size:
                 ext = arquivo_rel[ind:]
                 if ext.lower() in extensions:
-                    md5 = calcula_md5(arquivo_abs)
+                    hash_ = calcula_sha256(arquivo_abs)
                     try:
                         nomes.append(arquivo_rel)
-                        if md5 not in hashes:
-                            hashes[md5] = []
-                        hashes[md5].append(arquivo_rel)
+                        if hash_ not in hashes:
+                            hashes[hash_] = []
+                        hashes[hash_].append(arquivo_rel)
                         num += 1
                         if verbose_gf and num % 200 == 0:
                             imprime_msg(signal_msg, task_id, "    --> {:}".format(num))
@@ -89,13 +96,13 @@ def get_arquivos_hashes_100k_subdir(root_dir, extensions, min_size=5120, verbose
                 ext = arquivo_rel[ind:]
                 if ext.lower() in extensions:
                     # md5 = calcula_md5_100k(arquivo_abs, sz)
-                    md5 = calcula_md5(arquivo_abs)
+                    hash_ = calcula_sha256(arquivo_abs)
 
                     try:
                         nomes.append(arquivo_rel)
-                        if md5 not in hashes:
-                            hashes[md5] = []
-                        hashes[md5].append(arquivo_rel)
+                        if hash_ not in hashes:
+                            hashes[hash_] = []
+                        hashes[hash_].append(arquivo_rel)
                         num += 1
                         if verbose_gf and num % 80 == 0:
                             imprime_msg(signal_msg, task_id, "    --> {:}".format(num))
