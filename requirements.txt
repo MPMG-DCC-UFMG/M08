@@ -71,7 +71,7 @@ mysql-connector-python-rf==2.2.2
 nbconvert==5.6.1
 nbformat==5.0.6
 networkx==2.4
-notebook==6.0.3
+notebook==6.1.5
 numpy==1.18.4
 opencv-python==4.2.0.34
 packaging==20.4
