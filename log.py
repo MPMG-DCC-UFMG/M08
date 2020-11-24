@@ -11,9 +11,11 @@ class Log():
     def __init__(self):
         
         log_path = os.path.join(os.getcwd(), 'M08', 'log')
+        
         if not os.path.isdir(log_path):
             os.mkdir(log_path)
         self.log_path = log_path
+        self.log_root = log_path
         
         all_logs = []
         for logs in os.listdir(log_path):
@@ -33,13 +35,13 @@ class Log():
     def set_rootpath(self, rootpath):
         self.results['rootpath'] = rootpath
     
-    def set_id(self, id_analysis, empty=True):
+    def set_id(self, id_analysis, search=False, empty=True):
         
-        path = os.path.join(self.log_path, id_analysis)
-        if not os.path.isdir(path):
-            os.mkdir(path)
-            
-        self.log_path = path
+        self.results  = {'images': [], 'videos': [], 'rootpath': ''}
+        self.log_path = os.path.join(self.log_root, id_analysis)
+        if not os.path.isdir(self.log_path):
+            os.mkdir(self.log_path)
+        
         new_logfile  = os.path.join(self.log_path, os.path.basename(self.logfile))
         if os.path.isfile(self.logfile): 
             move(self.logfile, new_logfile)
@@ -49,7 +51,7 @@ class Log():
         self.id_analysis = id_analysis
         self.result_file = os.path.join(self.log_path, id_analysis)
         self.result_file += '.npz'
-        
+        print('set id', self.log_path, self.logfile, self.id_analysis)
         self.send(('imprime', 'Identificador da análise: {}'.format(id_analysis)))
         
     def send(self, tup):

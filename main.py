@@ -71,12 +71,12 @@ def set_analysis():
         
         idx = analysis_path.rfind('.')
         id_process = os.path.basename(analysis_path[:idx])
-
-        log_obj.set_id(id_process)
+        print('id process', id_process)
+        log_obj.set_id(id_process, search=True)
         return jsonify(id_process=id_process)
         
     flash('Erro ao carregar arquivo.'.format(id_process), 'error')
-    return redirect(url_for('main.new_analysis')) 
+    return redirect(url_for('main.search_analysis')) 
 
 ####################################################
 #                  NOVA ANALISE                    #
