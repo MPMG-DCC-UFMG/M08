@@ -45,6 +45,11 @@ def show_local_image(filepath):
     label.pack()
     
     pil_image = Image.open(filepath)
+    max_size = 600
+    width, height = pil_image.size
+    factor = max_size / max(width, height) 
+    pil_image = pil_image.resize((int(factor*width), int(factor*height) ))
+    
     canvas = Canvas(root, width = int(pil_image.size[0]), height = int(pil_image.size[1]))      
     canvas.pack()       
     

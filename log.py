@@ -51,7 +51,6 @@ class Log():
         self.id_analysis = id_analysis
         self.result_file = os.path.join(self.log_path, id_analysis)
         self.result_file += '.npz'
-        print('set id', self.log_path, self.logfile, self.id_analysis)
         self.send(('imprime', 'Identificador da análise: {}'.format(id_analysis)))
         
     def send(self, tup):

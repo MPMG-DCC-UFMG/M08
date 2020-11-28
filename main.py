@@ -2,6 +2,7 @@
 import sys, os, time, gc
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import unquote
 import subprocess
 import warnings
 warnings.filterwarnings('ignore')
@@ -9,7 +10,7 @@ warnings.simplefilter('ignore')
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 sys.path.append('./M08')
 from imageprocessor import ImageProcessor
@@ -63,7 +64,7 @@ def set_analysis():
     global id_process
 
     analysis_path = dialog._open_dialog_analysis()
-    if analysis_path is not None and analysis_path != '':
+    if analysis_path is not None and analysis_path != '' and isinstance(analysis_path, str):
         log_obj.send(('imprime', 
                       '{1} - [{0}] Importando dados de análise'.format(current_user.name,
                                                                      datetime.now().strftime("%d/%m/%Y %H:%M:%S")) 
@@ -105,7 +106,7 @@ def SOdialog():
     global global_path
 
     local_path = dialog._open_dialog_file()
-    if local_path is not None and local_path != '':
+    if local_path is not None and local_path != '' and isinstance(local_path, str):
         log_obj.send(('imprime', 
                       '{1} - [{0}] Nova análise'.format(current_user.name,
                                                      datetime.now().strftime("%d/%m/%Y %H:%M:%S")) 
@@ -318,6 +319,10 @@ def analysis_down():
 @main.route('/showmedia/<path:img_url>', methods=['POST', 'GET']) 
 def showmedia(img_url):
     
-    img_url = str(Path(img_url)).encode('utf-8')
+    if 'linux' in sys.platform:
+        img_url = str(Path('/' + unquote(img_url)))
+    else:
+        img_url = str(Path(unquote(img_url)))
+        
     dialog.show_local_image(img_url)
     return '', 204
