@@ -72,7 +72,6 @@ def set_analysis():
         
         idx = analysis_path.rfind('.')
         id_process = os.path.basename(analysis_path[:idx])
-        print('id process', id_process)
         log_obj.set_id(id_process, search=True)
         return jsonify(id_process=id_process)
         
