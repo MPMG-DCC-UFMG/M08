@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys, os, time, gc
 from shutil import copyfile, move
 from datetime import datetime
@@ -24,7 +25,7 @@ def dir_path(path):
     if os.path.isdir(path):
         return path
     else:
-        raise argparse.ArgumentTypeError(f"readable_dir:{path} is not a valid path")
+        raise argparse.ArgumentTypeError('readable_dir:{} is not a valid path'.format(path))
 
 parser = argparse.ArgumentParser(description='M08: Detecção de Pedofilia Infantil em Imagens e Vídeos.')
 parser.add_argument('-p', '--path', help='Diretório raíz onde se encontram as mídias para análise.', type=dir_path)
