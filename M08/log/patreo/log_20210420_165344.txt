@@ -1,5 +1,0 @@
-20/04/2021 16:53:50 - [Camila Laranjeira] Importando dados de análise
-Identificador da análise: patreo
-20/04/2021 16:53:51 - Iniciando criação de relatório de imagens
-20/04/2021 16:53:51 - Relatório concluído. Criando página.
-20/04/2021 16:53:57 - [Camila Laranjeira] Exportando dados.

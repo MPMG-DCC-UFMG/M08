@@ -12,7 +12,7 @@ warnings.simplefilter('ignore')
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 sys.path.append('./M08')
 from imageprocessor import ImageProcessor
@@ -27,7 +27,7 @@ from flask import Flask, Blueprint, render_template, request, jsonify,\
                   current_app, make_response, session, send_file, Response
 from flask.views import MethodView
 from . import db
-from . import dialog
+# from . import dialog
 from flask_login import login_required, current_user
 
 
@@ -181,28 +181,28 @@ def set_new_analysis():
         return redirect(url_for('main.path_view', p=global_path))
 
 
-# OS UI #
-@main.route('/SOdialog')
-@login_required
-def SOdialog():
-    global file_searcher
-    global log_obj
-    global global_path
+# # OS UI #
+# @main.route('/SOdialog')
+# @login_required
+# def SOdialog():
+#     global file_searcher
+#     global log_obj
+#     global global_path
 
-    local_path = dialog._open_dialog_file()
-    if local_path is not None and local_path != '' and isinstance(local_path, str):
-        log_obj.send(('imprime',
-                      '{1} - [{0}] Nova análise'.format(current_user.name,
-                                                     datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-                     ))
+#     local_path = dialog._open_dialog_file()
+#     if local_path is not None and local_path != '' and isinstance(local_path, str):
+#         log_obj.send(('imprime',
+#                       '{1} - [{0}] Nova análise'.format(current_user.name,
+#                                                      datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+#                      ))
 
-        global_path = local_path
-        file_searcher = FileSearcher(local_path)
-        file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
+#         global_path = local_path
+#         file_searcher = FileSearcher(local_path)
+#         file_searcher.get_from_directory(log_obj, 0, verbose_fs=True) #signal_msg, task_id
 
-        log_obj.set_rootpath(local_path)
+#         log_obj.set_rootpath(local_path)
 
-    return jsonify(path=local_path)
+#     return jsonify(path=local_path)
 
 @main.route('/idprocess', methods=['GET','POST'])
 @login_required

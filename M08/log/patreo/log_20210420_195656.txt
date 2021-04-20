@@ -1,0 +1,39 @@
+20/04/2021 19:57:09 - [Camila Laranjeira] Nova análise
+Inicia busca por imagens em: /home/MPMG/images - 2021-04-20 19:57:09
+Calcula hashs dos arquivos ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff']
+ Diretório root_dir /home/MPMG/images
+ Tamanho minimo 5120
+    --> 21
+Número de arquivos de imagem únicos: 21
+
+Inicia busca por vídeos em: /home/MPMG/images - 2021-04-20 19:57:09
+Calcula hashs dos arquivos hashs ['.wav', '.qt', '.mpeg', '.mpg', '.avi', '.mp4', '.3gp', '.mov', '.lvl', '.m4v', '.wmv']
+ Diretório root_dir /home/MPMG/images
+ Tamanho minimo 102400
+    --> 1
+Número de arquivos de vídeo únicos: 1
+
+Finalizado - 2021-04-20 19:57:09
+Identificador da análise: cergy_manual
+Iniciando processamento de imagens. 2021-04-20 19:57:16
+Todos os modelos foram carregados. 2021-04-20 19:57:24
+Progresso 100%: |#########################| Tempo decorrido: 12.021, 2021-04-20 19:57:36
+Finalizado o processamento de imagens2021-04-20 19:57:36
+2021-04-20 19:57:36
+Iniciando análise de vídeos. 2021-04-20 19:57:43
+Progresso 100%: |#########################| Tempo decorrido: 24.488, 2021-04-20 19:58:07
+2021-04-20 19:58:07
+Análise de vídeos completa. Verifique o log em caso de erros.
+20/04/2021 19:58:15 - Iniciando criação de relatório de imagens
+20/04/2021 19:58:15 - Relatório concluído. Criando página.
+20/04/2021 19:58:15 - Iniciando criação de relatório de vídeos
+20/04/2021 19:58:16 - Relatório concluído. Criando página.
+20/04/2021 19:58:59 - [Camila Laranjeira] Exportando dados.
+20/04/2021 20:00:17 - Iniciando criação de relatório de imagens
+20/04/2021 20:00:17 - Relatório concluído. Criando página.
+20/04/2021 20:00:51 - Iniciando criação de relatório de vídeos
+20/04/2021 20:00:51 - Relatório concluído. Criando página.
+20/04/2021 20:01:22 - [Camila Laranjeira] Importando dados de análise
+Identificador da análise: patreo
+20/04/2021 20:01:25 - Iniciando criação de relatório de imagens
+20/04/2021 20:01:25 - Relatório concluído. Criando página.

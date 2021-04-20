@@ -408,7 +408,7 @@ class ReportVideo():
         name = name[idx+1:]
 
         url = url.replace('\\', '\\\\')
-        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\"> {} </a>'.format(url, name)
+        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\" target=\"blank\"> {} </a>'.format(url, name)
 
     def color_nsfw(self, data):
 
