@@ -24,55 +24,44 @@
 </style>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
 <script type="text/javascript">
-var myVariable = {{ id_tabela | tojson }};
-$(document).ready( function () {
-    $(myVariable).dataTable({
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
-        },
-        });
-} );
+  var myVariable = {{ id_tabela | tojson }};
+  $(document).ready( function () {
+      $(myVariable).dataTable({
+          "language": {
+              "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
+          },
+          });
+  } );
 </script>
 <script type="text/javascript">
-    var myVariable2 = {{ id_tabela_2 | tojson }};
-    $(document).ready( function () {
-        $(myVariable2).dataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
-            },
-            });
-    } );
-    </script>
+  var myVariable2 = {{ id_tabela_2 | tojson }};
+  $(document).ready( function () {
+      $(myVariable2).dataTable({
+          "language": {
+              "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
+          },
+          });
+  } );
+</script>
 <h1 class="title">
     <section class="section has-background-link-light">
       <div class="container">
           <nav class="level pl-6 pr-6">
               <div class="level-left">
-				    <div class="collumn is-fluid has-text-left is-half">
-					  <h3 class="subtitle is-3">Relatório</h3>
-					  <h5 class="subtitle is-5">Responsável: {{name}}</h5>
-					  <h5 class="subtitle is-5">Nome (ID) da Análise: {{id_report}}</h5>
-					  <h5 class="subtitle is-5">Diretório raiz: {{path}}</h5>
-				    </div>
-			  </div>
-  
-               <div class="level-right">
-                  <div class="collumn is-fluid ">
-
-                      <script>
-                          $(function(){
-                              $("#analysis_down").click(function(event){
-                                  $.getJSON('/analysis_down', { }, function(data){
-  
-                                  });
-                                  return false;
-                              });
-                          });
-                      </script>
-					  <a id="analysis_down" class="button is-link is-medium is-fullwidth">Exportar Análise</a>
-					  
-                  </div>
-              </div>
+    				    <div class="collumn is-fluid has-text-left is-half">
+      					  <h3 class="subtitle is-3">Relatório</h3>
+      					  <h5 class="subtitle is-5">Responsável: {{name}}</h5>
+      					  <h5 class="subtitle is-5">Nome (ID) da Análise: {{id_report}}</h5>
+      					  <h5 class="subtitle is-5">Diretório raiz: {{path}}</h5>
+    				    </div>
+    			   </div>
+             <div class="level-right">
+                <div class="collumn is-fluid ">
+                  <a href="{{ url_for('main.analysis_down') }}" class="button is-link is-medium is-fullwidth" target="blank">
+                    Exportar Análise
+                  </a>
+                </div>
+            </div>
           </nav>
 		  <div class="collumn is-fluid has-text-left pl-6 pr-6">
 			<p class="has-text-danger-dark is-size-5">Atenção: <p class="is-size-5"> Os resultados a seguir são fruto de um modelo probabilístico, com objetivo de auxílio em triagem e portanto pode haver falsos positivos e/ou falsos negativos. Favor verificá-los visualmente.</p></p>
