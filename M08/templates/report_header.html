@@ -33,6 +33,18 @@ $(document).ready( function () {
         });
 } );
 </script>
+
+<div class="modal fade" id="show-image" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close pull-xs-right" data-dismiss="modal" aria-hidden="true">&times;</button>
+      </div>
+      <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
 <h1 class="title">
     <section class="section has-background-link-light">
       <div class="container">
@@ -48,17 +60,9 @@ $(document).ready( function () {
   
               <div class="level-right">
                   <div class="collumn is-fluid ">
-					  <script>
-                          $(function(){
-                              $("#analysis_down").click(function(event){
-                                  $.getJSON('/analysis_down', { }, function(data){
-  
-                                  });
-                                  return false;
-                              });
-                          });
-                      </script>
-					  <a id="analysis_down" class="button is-link is-medium is-fullwidth">Exportar Análise</a>  
+                    <a href="{{ url_for('main.analysis_down') }}" class="button is-link is-medium is-fullwidth" target="blank">
+                      Exportar Análise
+                    </a>
                   </div>
               </div>
           </nav>

@@ -6,38 +6,16 @@
         <nav class="level pl-6 pr-6">
             <div class="columns">
                 <div class="collumn is-fluid">
-                    <h3 class="subtitle is-3 has-text-left">Selecione o arquivo de análise, {{name}}</h3>
+                    <h3 class="subtitle is-3 has-text-left">Selecione o diretório que contém a análise, {{name}}</h3>
 
-                    <div class="file is-small is-info has-name is-fullwidth">
-                        <label class="file-label">
-                            <script>
-                                $(function(){
-                                    $("#input-folder").click(function(event){
-                                        $.getJSON('/set_analysis', { }, function(data){
-                                            $("#path-name").text(data.id_process)
-                                        });
-                                        return false;
-                                    });
-                                });
-                            </script>
-
-                            <a href="#" id="input-folder"><button class="file-input"></button></a>
-
-                            <span class="file-cta">
-                                <span class="file-icon">
-                                    <i class="fas fa-upload"></i>
-                                </span>
-
-                                <span class="file-label mr-5">
-                                    Selecione o arquivo
-                                </span>
-                            </span>
-
-                            <span class="file-name has-background-white pr-6 pl-6 mr-6" id="path-name">
-                                {{ id_process }}
-                            </span>
-                        </label>
+                    <a href="{{ url_for('main.path_view') }}"></a>
+                    <div class="file is-small is-info has-name">
+                        <a href="{{ url_for('main.path_view') }}"><button class="button is-info is-small is-fullwidth">Selecione o Diretório</button></a>
+                        <span class="file-name has-background-white pr-6 pl-6 mr-6" id="path-name">
+                            {{ id_process }}
+                        </span>
                     </div>
+
                 </div>
             </div>
         </nav>
@@ -76,7 +54,7 @@
 									<div class="collumns  ">
 										<div class="column mt-6 pt-6 pl-3 pr-3">
 											<form action="/settings/search" method="post">
-												
+
 												<div class="control mb-2">
 													<input class="input" type="text" value={{ conf_nsfw }} name="conf_nsfw" />
 												</div>
@@ -84,11 +62,11 @@
 												<div class="control mb-3  ">
 													<input class="input mt-2" type="text" value={{ conf_face }} name="conf_face"/>
 												</div>
-												
+
 												<div class="control mb-3  ">
 													<input class="input mt-2" type="text" value={{ conf_child }} name="conf_child"/>
 												</div>
-												
+
 												<div class="control mb-3  ">
 													<input class="input mt-2" type="text" value={{ conf_age }} name="conf_age"/>
 												</div>
@@ -124,7 +102,7 @@
 					});
 				</script>
 			</div>
-			
+
 			<div class="buttons is-centered">
 				<a href="{{ url_for('main.IMGreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Imagens</a>
 			</div>
@@ -136,8 +114,8 @@
 			<div class="buttons is-centered">
 				<a href="{{ url_for('main.IMGVIDreport') }}" target="_blank" class="button is-info" style="width: 40%;">Gerar Relatório de Todos</a>
 			</div>
-	
-		
+
+
         </div>
     </div>
 </section>
@@ -145,8 +123,8 @@
 <section class="section has-background-link-light">
     <div class="container is-fullwidth">
 		<form action="/log/search" method="post">
-		<label class="subtitle is-3">Log do Processamento </label> 
-		<button type="submit" class="button is-link ml-2"> 
+		<label class="subtitle is-3">Log do Processamento </label>
+		<button type="submit" class="button is-link ml-2">
 			<span> Atualizar </span>
 		</button>
 		</form>

@@ -125,10 +125,11 @@ class ReportImage():
         return html, '#' + table_id
 
     def make_clickable(self, url):
+
         name = os.path.basename(url)
-#         return '<a href="{}">{}</a>'.format(url,name)
         url = url.replace('\\', '\\\\')
-        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\"> {} </a>'.format(url, name)
+        
+        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\" target=\"blank\"> {} </a>'.format(url, name)
 
     def color_nsfw(self, data):
 
@@ -398,7 +399,8 @@ class ReportVideo():
     def make_clickable(self, url):
         name = os.path.basename(url)
         url = url.replace('\\', '\\\\')
-        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\"> {} </a>'.format(url, name)
+        
+        return '<a href=\"{{{{ url_for(\'main.showmedia\' , img_url=\'{}\') }}}}\" target=\"blank\"> {} </a>'.format(url, name)
 
     def make_clickable_thumb(self, url):
         name = os.path.basename(url)
